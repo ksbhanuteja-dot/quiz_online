@@ -43,10 +43,18 @@ export default function StudentDashboard() {
     fetchStats();
   }, []);
 
+  if (!stats && !isLoading) {
+    return (
+      <div className="p-8 text-center text-red-600 bg-red-50 rounded-2xl border border-red-200">
+        Failed to load dashboard data. Please check your connection.
+      </div>
+    );
+  }
+
   const statCards = [
-    { name: 'Quizzes Completed', value: stats.totalAttempted, icon: FileText, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/30' },
-    { name: 'Average Score', value: `${stats.averageScore}%`, icon: Target, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
-    { name: 'Highest Score', value: `${stats.highestScore}%`, icon: TrophyIcon, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/30' }
+    { name: 'Quizzes Completed', value: stats?.totalAttempted ?? 0, icon: FileText, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/30' },
+    { name: 'Average Score', value: `${stats?.averageScore ?? 0}%`, icon: Target, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
+    { name: 'Highest Score', value: `${stats?.highestScore ?? 0}%`, icon: TrophyIcon, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/30' }
   ];
 
   return (
@@ -116,13 +124,13 @@ export default function StudentDashboard() {
         </div>
 
         {/* Recent Activity Mini-list */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+  <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Recent Activity</h2>
           {isLoading ? (
             <div className="space-y-4">
                {[1, 2, 3].map((i) => <div key={i} className="h-16 bg-slate-50 dark:bg-slate-800 rounded-xl animate-pulse"></div>)}
             </div>
-          ) : (
+          ) : (stats?.recentScores && stats.recentScores.length > 0) ? (
             <div className="space-y-4">
               {stats.recentScores.slice().reverse().slice(0, 4).map((quiz, i) => (
                 <div key={i} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
@@ -141,6 +149,8 @@ export default function StudentDashboard() {
                 </div>
               ))}
             </div>
+          ) : (
+            <div className="py-8 text-center text-sm text-slate-500">No recent activity.</div>
           )}
         </div>
       </div>

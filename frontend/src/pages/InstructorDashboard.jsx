@@ -37,33 +37,41 @@ export default function InstructorDashboard() {
   const statCards = [
     { 
       name: 'Total Quizzes', 
-      value: stats.totalQuizzes, 
+      value: stats?.totalQuizzes ?? 0, 
       icon: FileText, 
       color: 'text-blue-600', 
       bgColor: 'bg-blue-50' 
     },
     { 
       name: 'Total Attempts', 
-      value: stats.totalAttempts, 
+      value: stats?.totalAttempts ?? 0, 
       icon: Users, 
       color: 'text-emerald-600', 
       bgColor: 'bg-emerald-50' 
     },
     { 
       name: 'Average Score', 
-      value: `${stats.averageScore}%`, 
+      value: `${stats?.averageScore ?? 0}%`, 
       icon: Target, 
       color: 'text-purple-600', 
       bgColor: 'bg-purple-50' 
     },
     { 
       name: 'Active Students', 
-      value: stats.activeStudents, 
+      value: stats?.activeStudents ?? 0, 
       icon: TrendingUp, 
       color: 'text-amber-600', 
       bgColor: 'bg-amber-50' 
     },
   ];
+
+  if (!stats && !isLoading) {
+    return (
+      <div className="p-8 text-center text-red-600 bg-red-50 rounded-2xl border border-red-200">
+        Failed to load dashboard data. Please check your connection.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
