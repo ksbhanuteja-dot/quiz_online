@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime, timezone
 from app.database import get_db
 from app.models import Quiz, Question, Option, Attempt, StudentAnswer, User
 from app.schemas.quiz import QuizResponse, QuizFullResponse
 from app.schemas.attempt import AttemptSubmit, AttemptResponse
-from app.api.dependencies import get_current_active_user, require_role
+from app.api.dependencies import require_role
+from app.core.response_utils import success_response, error_response
 
 router = APIRouter()
 
@@ -27,7 +29,68 @@ def get_quiz_for_attempt(
         raise HTTPException(status_code=404, detail="Quiz not found")
     return quiz
 
-@router.post("/{quiz_id}/attempt", response_model=AttemptResponse)
+@router.post("/{quiz_id}/start", response_model=AttemptResponse)
+def start_quiz_attempt(
+    quiz_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Student"))
+):
+    quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    
+    # Check if there's already an in-progress attempt
+    existing_attempt = db.query(Attempt).filter(
+        Attempt.student_id == current_user.id,
+        Attempt.quiz_id == quiz_id,
+        Attempt.status == "in_progress"
+    ).first()
+    
+    if existing_attempt:
+        return existing_attempt
+        
+    new_attempt = Attempt(
+        student_id=current_user.id,
+        quiz_id=quiz_id,
+        status="in_progress",
+        started_at=datetime.now(timezone.utc)
+    )
+    db.add(new_attempt)
+    db.commit()
+    db.refresh(new_attempt)
+    return new_attempt
+
+@router.post("/{quiz_id}/save", status_code=status.HTTP_200_OK)
+def save_quiz_progress(
+    quiz_id: int,
+    submission: AttemptSubmit,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("Student"))
+):
+    attempt = db.query(Attempt).filter(
+        Attempt.quiz_id == quiz_id,
+        Attempt.student_id == current_user.id,
+        Attempt.status == "in_progress"
+    ).first()
+    
+    if not attempt:
+        raise HTTPException(status_code=404, detail="Active attempt not found")
+    
+    # Clear previous saved answers for this attempt to replace with new ones
+    db.query(StudentAnswer).filter(StudentAnswer.attempt_id == attempt.id).delete()
+    
+    for ans in submission.answers:
+        student_ans = StudentAnswer(
+            attempt_id=attempt.id,
+            question_id=ans.question_id,
+            selected_option_id=ans.selected_option_id
+        )
+        db.add(student_ans)
+    
+    db.commit()
+    return success_response("Progress saved successfully")
+
+@router.post("/{quiz_id}/submit", response_model=AttemptResponse)
 def submit_quiz_attempt(
     quiz_id: int, 
     submission: AttemptSubmit, 
@@ -35,16 +98,31 @@ def submit_quiz_attempt(
     current_user: User = Depends(require_role("Student"))
 ):
     quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
-    if not quiz:
-        raise HTTPException(status_code=404, detail="Quiz not found")
+    attempt = db.query(Attempt).filter(
+        Attempt.quiz_id == quiz_id,
+        Attempt.student_id == current_user.id,
+        Attempt.status == "in_progress"
+    ).first()
     
+    if not attempt:
+        raise HTTPException(status_code=404, detail="Active attempt not found")
+    
+    # TIMER VALIDATION
+    now = datetime.now(timezone.utc)
+    elapsed_time = (now - attempt.started_at.replace(tzinfo=timezone.utc)).total_seconds()
+    
+    # Allow a small buffer (e.g., 5 seconds) for network latency
+    if elapsed_time > (quiz.timer + 5):
+        attempt.status = "timed_out"
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_408_REQUEST_TIMEOUT, detail="Quiz session expired")
+
     # Calculate score
     total_score = 0
     correct_options = {opt.question_id: opt.id for q in quiz.questions for opt in q.options if opt.is_correct}
     
-    attempt = Attempt(student_id=current_user.id, quiz_id=quiz_id, score=0)
-    db.add(attempt)
-    db.flush()
+    # Clear saved answers to re-submit finalize
+    db.query(StudentAnswer).filter(StudentAnswer.attempt_id == attempt.id).delete()
     
     for ans in submission.answers:
         is_correct = correct_options.get(ans.question_id) == ans.selected_option_id
@@ -59,6 +137,8 @@ def submit_quiz_attempt(
         db.add(student_ans)
     
     attempt.score = total_score
+    attempt.status = "completed"
+    attempt.completed_at = now
     db.commit()
     db.refresh(attempt)
     return attempt
