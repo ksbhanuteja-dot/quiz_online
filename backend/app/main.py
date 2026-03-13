@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints import auth
+from app.api.endpoints import auth, instructor_quiz, instructor_analytics, student_quiz, student_dashboard
 from app.database import engine, Base
 
 # Create database tables
@@ -12,17 +12,21 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS Middleware for frontend communication
+# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Adjust in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include Authentication Router
+# Include Routers
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+app.include_router(instructor_quiz.router, prefix="/instructor/quizzes", tags=["Instructor Quizzes"])
+app.include_router(instructor_analytics.router, prefix="/instructor/analytics", tags=["Instructor Analytics"])
+app.include_router(student_quiz.router, prefix="/student/quizzes", tags=["Student Quizzes"])
+app.include_router(student_dashboard.router, prefix="/student/dashboard", tags=["Student Dashboard"])
 
 @app.get("/")
 def root():
