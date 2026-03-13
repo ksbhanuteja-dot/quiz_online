@@ -4,25 +4,21 @@ import { AuthContext } from '../../context/AuthContext';
 import { 
   Brain, 
   LayoutDashboard, 
-  Library, 
-  PlusCircle, 
-  BarChart3, 
+  PlayCircle, 
   Trophy, 
   LogOut,
   Menu
 } from 'lucide-react';
 import ThemeToggle from '../shared/ThemeToggle';
 
-export default function InstructorLayout() {
+export default function StudentLayout() {
   const { user, logout } = useContext(AuthContext);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'My Quizzes', path: '/dashboard/quizzes', icon: Library },
-    { name: 'Create Quiz', path: '/dashboard/create-quiz', icon: PlusCircle },
-    { name: 'Analytics', path: '/dashboard/analytics', icon: BarChart3 },
-    { name: 'Leaderboard', path: '/dashboard/leaderboard', icon: Trophy },
+    { name: 'Dashboard', path: '/student-dashboard', icon: LayoutDashboard },
+    { name: 'Available Quizzes', path: '/student-dashboard/quizzes', icon: PlayCircle },
+    { name: 'Leaderboard', path: '/student-dashboard/leaderboard', icon: Trophy },
   ];
 
   return (
@@ -44,7 +40,7 @@ export default function InstructorLayout() {
           <div className="flex items-center justify-between px-6 py-8 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-3">
               <Brain size={32} className="text-primary-600 dark:text-primary-500" />
-              <span className="text-2xl font-bold text-slate-900 dark:text-white">Instructor</span>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white">Student</span>
             </div>
             <div className="hidden lg:block">
               <ThemeToggle />
@@ -58,7 +54,7 @@ export default function InstructorLayout() {
                 <NavLink
                   key={item.name}
                   to={item.path}
-                  end={item.path === '/dashboard'}
+                  end={item.path === '/student-dashboard'}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={({ isActive }) => `
                     flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium
@@ -76,11 +72,9 @@ export default function InstructorLayout() {
           </nav>
 
           <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-            <div className="px-4 py-3 mb-2 flex items-center justify-between">
-              <div className="overflow-hidden">
-                <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{user?.name || 'Instructor'}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
-              </div>
+            <div className="px-4 py-3 mb-2">
+              <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{user?.name || 'Student'}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
             </div>
             <button
               onClick={logout}

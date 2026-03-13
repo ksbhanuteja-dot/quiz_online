@@ -1,15 +1,22 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import StudentDashboard from './pages/StudentDashboard';
-import InstructorDashboard from './pages/InstructorDashboard';
 import InstructorLayout from './components/layout/InstructorLayout';
+import InstructorDashboard from './pages/InstructorDashboard';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import QuizList from './pages/QuizList';
 import CreateQuiz from './pages/CreateQuiz';
 import EditQuiz from './pages/EditQuiz';
 import Analytics from './pages/Analytics';
 import Leaderboard from './pages/Leaderboard';
+
+// Student Imports
+import StudentLayout from './components/layout/StudentLayout';
+import StudentDashboard from './pages/StudentDashboard';
+import AvailableQuizzes from './pages/AvailableQuizzes';
+import TakeQuiz from './pages/TakeQuiz';
+import QuizResult from './pages/QuizResult';
+import StudentLeaderboard from './pages/StudentLeaderboard';
 
 function App() {
   return (
@@ -37,13 +44,19 @@ function App() {
 
       {/* Student Routes */}
       <Route 
-        path="/student-dashboard/*" 
+        path="/student-dashboard" 
         element={
           <ProtectedRoute allowedRoles={['student']}>
-            <StudentDashboard />
+            <StudentLayout />
           </ProtectedRoute>
         } 
-      />
+      >
+        <Route index element={<StudentDashboard />} />
+        <Route path="quizzes" element={<AvailableQuizzes />} />
+        <Route path="take-quiz/:id" element={<TakeQuiz />} />
+        <Route path="results/:attemptId" element={<QuizResult />} />
+        <Route path="leaderboard" element={<StudentLeaderboard />} />
+      </Route>
     </Routes>
   );
 }
