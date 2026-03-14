@@ -18,14 +18,18 @@ export default function EditQuiz() {
       try {
         const response = await api.get(`/instructor/quizzes/${id}`);
         setQuizDetails({ title: response.data.title, timer: response.data.timer });
-        setQuestions(response.data.questions.map(q => ({ ...q, id: q.id || Date.now() + Math.random() })));
+        setQuestions(response.data.questions.map(q => {
+          const correctIdx = q.options.findIndex(o => o.is_correct);
+          return {
+            id: q.id,
+            text: q.question_text,
+            options: q.options.map(o => o.option_text),
+            correctOptionIndex: correctIdx !== -1 ? correctIdx : 0
+          };
+        }));
       } catch (err) {
-        console.warn("Using mock data due to API failure:", err);
-        // Mock data fetch
-        setQuizDetails({ title: 'React Fundamentals', timer: 1800 });
-        setQuestions([
-          { id: 1, text: 'What is JSX?', options: ['JavaScript XML', 'Java Syntax Extension', 'JSON Syntax XML', 'None of the above'], correctOptionIndex: 0 }
-        ]);
+        console.error("Failed to load quiz data:", err);
+        setError("Failed to load quiz data from server.");
       } finally {
         setIsLoading(false);
       }
@@ -58,14 +62,24 @@ export default function EditQuiz() {
     }
 
     setIsSubmitting(true);
-    const payload = { ...quizDetails, questions: questions.map(({ id, ...rest }) => rest) };
+    const payload = {
+      title: quizDetails.title,
+      timer: quizDetails.timer,
+      questions: questions.map((q) => ({
+        question_text: q.text,
+        options: q.options.map((opt, idx) => ({
+          option_text: opt,
+          is_correct: idx === q.correctOptionIndex
+        }))
+      }))
+    };
 
     try {
       await api.put(`/instructor/quizzes/${id}`, payload);
-      navigate('/dashboard/quizzes');
+      navigate('/instructor-dashboard');
     } catch (err) {
       console.error(err);
-      setTimeout(() => navigate('/dashboard/quizzes'), 500); // mock success
+      setError('Failed to update quiz on server.');
     } finally {
       setIsSubmitting(false);
     }

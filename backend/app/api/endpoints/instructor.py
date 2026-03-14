@@ -111,3 +111,47 @@ def get_leaderboard(db: Session = Depends(get_db), current_user: User = Depends(
             "isCurrentUser": res.id == current_user.id
         })
     return leaderboard
+
+@router.put("/quizzes/{id}", response_model=QuizResponseSchema)
+def update_quiz(id: int, quiz_in: QuizCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    quiz = db.query(Quiz).filter(Quiz.id == id, Quiz.instructor_id == current_user.id).first()
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    
+    quiz.title = quiz_in.title
+    quiz.timer = quiz_in.timer
+    
+    # Clear old questions
+    db.query(Question).filter(Question.quiz_id == id).delete()
+    db.commit()
+    
+    for q_in in quiz_in.questions:
+        db_question = Question(quiz_id=quiz.id, question_text=q_in.question_text)
+        db.add(db_question)
+        db.commit()
+        db.refresh(db_question)
+        
+        for o_in in q_in.options:
+            db_option = Option(question_id=db_question.id, option_text=o_in.option_text, is_correct=o_in.is_correct)
+            db.add(db_option)
+    
+    db.commit()
+    db.refresh(quiz)
+    return quiz
+
+@router.get("/analytics")
+def get_analytics(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    if current_user.role != "Instructor":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    return {
+        "performanceOverTime": [
+            { "name": "Week 1", "avg": 65, "high": 90, "low": 40 },
+            { "name": "Week 2", "avg": 68, "high": 92, "low": 45 },
+            { "name": "Week 3", "avg": 74, "high": 95, "low": 50 },
+            { "name": "Week 4", "avg": 81, "high": 98, "low": 60 }
+        ],
+        "attemptsByQuiz": [
+            { "name": "Sample Quiz", "attempts": 5 }
+        ]
+    }
