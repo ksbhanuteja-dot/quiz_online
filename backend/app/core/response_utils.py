@@ -1,13 +1,15 @@
-from typing import Any, Optional
+from typing import Any, Optional, Generic, TypeVar
 from pydantic import BaseModel
 
-class APIResponse(BaseModel):
+T = TypeVar("T")
+
+class APIResponse(BaseModel, Generic[T]):
     success: bool
-    data: Optional[Any] = None
+    data: Optional[T] = None
     error: Optional[str] = None
 
-def success_response(data: Any = None):
-    return APIResponse(success=True, data=data)
+def success_response(data: T = None):
+    return {"success": True, "data": data, "error": None}
 
 def error_response(message: str):
-    return APIResponse(success=False, error=message)
+    return {"success": False, "data": None, "error": message}

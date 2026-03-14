@@ -15,3 +15,11 @@ class Quiz(Base):
     instructor = relationship("User", backref="quizzes")
     questions = relationship("Question", back_populates="quiz", cascade="all, delete-orphan")
     attempts = relationship("Attempt", back_populates="quiz")
+
+    @property
+    def instructor_name(self):
+        return self.instructor.name if self.instructor else "Unknown"
+
+    @property
+    def questions_count(self):
+        return len(self.questions)

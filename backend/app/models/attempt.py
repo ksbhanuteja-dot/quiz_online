@@ -17,3 +17,22 @@ class Attempt(Base):
     student = relationship("User", backref="attempts")
     quiz = relationship("Quiz", back_populates="attempts")
     answers = relationship("StudentAnswer", back_populates="attempt")
+
+    @property
+    def quiz_title(self):
+        return self.quiz.title if self.quiz else "Unknown Quiz"
+
+    @property
+    def correct_count(self):
+        return self.score
+
+    @property
+    def total_questions(self):
+        return len(self.quiz.questions) if self.quiz else 0
+
+    @property
+    def percentage_score(self):
+        total = self.total_questions
+        if total == 0: return 0
+        return round((self.score / total) * 100)
+

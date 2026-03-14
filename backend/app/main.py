@@ -19,7 +19,7 @@ app = FastAPI(
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
-        content=error_response(f"An unexpected error occurred: {str(exc)}").dict()
+        content=error_response(f"An unexpected error occurred: {str(exc)}")
     )
 
 from fastapi import HTTPException
@@ -27,24 +27,35 @@ from fastapi import HTTPException
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
         status_code=exc.status_code,
-        content=error_response(exc.detail).dict()
+        content=error_response(exc.detail)
     )
 
 # CORS Middleware
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include Routers
-app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
-app.include_router(instructor_quiz.router, prefix="/instructor/quizzes", tags=["Instructor Quizzes"])
-app.include_router(instructor_analytics.router, prefix="/instructor/analytics", tags=["Instructor Analytics"])
-app.include_router(student_quiz.router, prefix="/student/quizzes", tags=["Student Quizzes"])
-app.include_router(student_dashboard.router, prefix="/student/dashboard", tags=["Student Dashboard"])
+# Include Routers with /api prefix
+from fastapi import APIRouter
+api_router = APIRouter(prefix="/api")
+
+api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+api_router.include_router(instructor_quiz.router, prefix="/instructor/quizzes", tags=["Instructor Quizzes"])
+api_router.include_router(instructor_analytics.router, prefix="/instructor/analytics", tags=["Instructor Analytics"])
+api_router.include_router(student_quiz.router, prefix="/student/quizzes", tags=["Student Quizzes"])
+api_router.include_router(student_dashboard.router, prefix="/student/dashboard", tags=["Student Dashboard"])
+
+app.include_router(api_router)
 
 @app.get("/")
 def root():

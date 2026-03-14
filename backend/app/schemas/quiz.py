@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from typing import List, Optional
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 # --- OPTION SCHEMAS ---
@@ -47,6 +47,8 @@ class QuizUpdate(BaseModel):
 class QuizResponse(QuizBase):
     id: int
     instructor_id: int
+    instructor: str = Field(validation_alias="instructor_name")
+    questionsCount: int = Field(validation_alias="questions_count")
     created_at: datetime
 
     class Config:

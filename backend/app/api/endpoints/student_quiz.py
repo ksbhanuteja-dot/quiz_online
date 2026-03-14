@@ -7,18 +7,19 @@ from app.models import Quiz, Question, Option, Attempt, StudentAnswer, User
 from app.schemas.quiz import QuizResponse, QuizFullResponse
 from app.schemas.attempt import AttemptSubmit, AttemptResponse
 from app.api.dependencies import require_role
-from app.core.response_utils import success_response, error_response
+from app.core.response_utils import success_response, error_response, APIResponse
 
 router = APIRouter()
 
-@router.get("/", response_model=List[QuizResponse])
+@router.get("/", response_model=APIResponse[List[QuizResponse]])
 def list_active_quizzes(
     db: Session = Depends(get_db), 
     current_user: User = Depends(require_role("Student"))
 ):
-    return db.query(Quiz).all()
+    results = db.query(Quiz).all()
+    return success_response(results)
 
-@router.get("/{quiz_id}", response_model=QuizFullResponse)
+@router.get("/{quiz_id}", response_model=APIResponse[QuizFullResponse])
 def get_quiz_for_attempt(
     quiz_id: int, 
     db: Session = Depends(get_db), 
@@ -27,9 +28,9 @@ def get_quiz_for_attempt(
     quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
-    return quiz
+    return success_response(quiz)
 
-@router.post("/{quiz_id}/start", response_model=AttemptResponse)
+@router.post("/{quiz_id}/start", response_model=APIResponse[AttemptResponse])
 def start_quiz_attempt(
     quiz_id: int,
     db: Session = Depends(get_db),
@@ -47,7 +48,7 @@ def start_quiz_attempt(
     ).first()
     
     if existing_attempt:
-        return existing_attempt
+        return success_response(existing_attempt)
         
     new_attempt = Attempt(
         student_id=current_user.id,
@@ -58,7 +59,7 @@ def start_quiz_attempt(
     db.add(new_attempt)
     db.commit()
     db.refresh(new_attempt)
-    return new_attempt
+    return success_response(new_attempt)
 
 @router.post("/{quiz_id}/save", status_code=status.HTTP_200_OK)
 def save_quiz_progress(
@@ -90,7 +91,7 @@ def save_quiz_progress(
     db.commit()
     return success_response("Progress saved successfully")
 
-@router.post("/{quiz_id}/submit", response_model=AttemptResponse)
+@router.post("/{quiz_id}/submit", response_model=APIResponse[AttemptResponse])
 def submit_quiz_attempt(
     quiz_id: int, 
     submission: AttemptSubmit, 
@@ -141,4 +142,4 @@ def submit_quiz_attempt(
     attempt.completed_at = now
     db.commit()
     db.refresh(attempt)
-    return attempt
+    return success_response(attempt)

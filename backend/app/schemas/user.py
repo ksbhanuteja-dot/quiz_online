@@ -23,6 +23,15 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
 
+class SignupResponse(BaseModel):
+    """Returned by /signup — includes token for auto-login."""
+    id: int
+    name: str
+    email: str
+    role: str
+    access_token: str
+    token_type: str
+
 class Token(BaseModel):
     access_token: str
     token_type: str
