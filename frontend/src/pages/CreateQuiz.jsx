@@ -69,18 +69,23 @@ export default function CreateQuiz() {
     setIsSubmitting(true);
     
     const payload = {
-      ...quizDetails,
-      questions: questions.map(({ id, ...rest }) => rest) // remove UI-only temp id
+      title: quizDetails.title,
+      timer: quizDetails.timer,
+      questions: questions.map((q) => ({
+        question_text: q.text,
+        options: q.options.map((opt, idx) => ({
+          option_text: opt,
+          is_correct: idx === q.correctOptionIndex
+        }))
+      }))
     };
 
     try {
       await api.post('/instructor/quizzes', payload);
-      navigate('/dashboard/quizzes');
+      navigate('/instructor-dashboard');
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || 'Failed to craft API payload realistically. Wait, backend absent. We pretend success!');
-      // Assuming mock success for now when backend is missing
-      setTimeout(() => navigate('/dashboard/quizzes'), 500);
+      console.error('Failed to create quiz:', err);
+      setError(err.response?.data?.detail || 'Failed to create quiz.');
     } finally {
       setIsSubmitting(false);
     }

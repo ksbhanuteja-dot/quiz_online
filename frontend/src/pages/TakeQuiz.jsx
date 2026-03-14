@@ -46,7 +46,7 @@ export default function TakeQuiz() {
     clearInterval(timerRef.current);
 
     const payload = {
-      quizId: id,
+      quiz_id: parseInt(id, 10),
       answers: answers
     };
 
@@ -54,23 +54,11 @@ export default function TakeQuiz() {
       const response = await api.post(`/student/quizzes/${id}/submit`, payload);
       navigate(`/student-dashboard/results/${response.data.attemptId}`, { state: { result: response.data } });
     } catch (err) {
-      console.warn('Mocking submission:', err);
-      // Mock result processing
-      let score = 0;
-      const total = quiz.questions.length;
-      // Mock logic: randomly assume correct or look for specific answers if we want
-      score = Object.keys(answers).length > 0 ? Object.keys(answers).length : 0; 
-      
-      const mockResult = {
-        score: Math.round((score / total) * 100),
-        correctCount: score,
-        totalQuestions: total,
-        quizTitle: quiz.title
-      };
-      
-      setTimeout(() => navigate(`/student-dashboard/results/${Date.now()}`, { state: { result: mockResult } }), 1000);
+      console.error('Failed to submit quiz:', err);
+      setError(err.response?.data?.detail || 'Failed to submit quiz.');
+      setIsSubmitting(false);
     }
-  }, [id, answers, navigate, quiz]);
+  }, [id, answers, navigate]);
 
   // Timer logic
   useEffect(() => {
