@@ -28,7 +28,7 @@ export default function AvailableQuizzes() {
     fetchQuizzes();
   }, []);
 
-  const filteredQuizzes = quizzes.filter(q => 
+  const filteredQuizzes = quizzes.filter(q =>
     q.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -39,7 +39,7 @@ export default function AvailableQuizzes() {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Available Quizzes</h1>
           <p className="mt-2 text-slate-600 dark:text-slate-400">Select a quiz below to begin your attempt.</p>
         </div>
-        
+
         <div className="relative w-full sm:w-72">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search size={18} className="text-slate-400" />
@@ -75,7 +75,7 @@ export default function AvailableQuizzes() {
                   {quiz.title}
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Instructor: {quiz.instructor}</p>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                     <Clock size={16} className="text-primary-500" />
@@ -87,7 +87,7 @@ export default function AvailableQuizzes() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
                 <button
                   onClick={() => navigate(`/student-dashboard/take-quiz/${quiz.id}`)}

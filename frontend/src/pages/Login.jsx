@@ -19,7 +19,7 @@ export default function Login() {
     try {
       // Mocking API call for frontend development if backend isn't ready
       // Replace this try block functionality appropriately when integrating
-      const response = await api.post('/login', { email, password });
+      const response = await api.post('/auth/login', { email, password });
       
       // Expected response structure: { token: 'jwt...', user: { name: '...', role: 'instructor' } }
       if (response.data.token && response.data.user) {

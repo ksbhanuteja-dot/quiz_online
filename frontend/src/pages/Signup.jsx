@@ -9,7 +9,7 @@ export default function Signup() {
     name: '',
     email: '',
     password: '',
-    role: 'student'
+    role: 'Student'
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +25,7 @@ export default function Signup() {
     setIsLoading(true);
 
     try {
-      const response = await api.post('/signup', formData);
+      const response = await api.post('/auth/signup', formData);
       
       if (response.data.token && response.data.user) {
         login(response.data.user, response.data.token);
@@ -126,8 +126,8 @@ export default function Signup() {
                       onChange={handleChange}
                       className="block w-full rounded-xl border-0 py-3 px-4 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 transition-all bg-white"
                     >
-                      <option value="student">Student</option>
-                      <option value="instructor">Instructor</option>
+                      <option value="Student">Student</option>
+                      <option value="Instructor">Instructor</option>
                     </select>
                   </div>
                 </div>

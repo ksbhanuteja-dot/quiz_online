@@ -30,3 +30,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: Optional[str] = None
     role: Optional[str] = None
+
+class UserWithToken(BaseModel):
+    token: str
+    user: UserResponse
