@@ -31,8 +31,7 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
     return user
 
 def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
-    if not current_user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+    # Email verification is not required; all registered users are allowed.
     return current_user
 
 def require_role(required_role: str):

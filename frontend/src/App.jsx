@@ -17,7 +17,6 @@ import AvailableQuizzes from './pages/AvailableQuizzes';
 import TakeQuiz from './pages/TakeQuiz';
 import QuizResult from './pages/QuizResult';
 import StudentLeaderboard from './pages/StudentLeaderboard';
-import VerifyEmail from './pages/VerifyEmail';
 
 function App() {
   return (
@@ -25,7 +24,6 @@ function App() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/verify-email" element={<VerifyEmail />} />
       
       {/* Instructor Routes */}
       <Route 

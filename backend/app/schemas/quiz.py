@@ -53,3 +53,8 @@ class QuizSimple(QuizBase):
 
     class Config:
         from_attributes = True
+
+
+class ImportQuizResponse(BaseModel):
+    message: str
+    quiz: QuizResponseSchema

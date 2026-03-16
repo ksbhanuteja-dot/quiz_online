@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, model_validator
 from typing import Optional
 from datetime import datetime
 
@@ -8,7 +8,14 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     name: str
     password: str
-    role: str # "Instructor" or "Student"
+    confirm_password: str
+    role: str  # "Instructor" or "Student"
+
+    @model_validator(mode='after')
+    def passwords_match(self):
+        if self.password != self.confirm_password:
+            raise ValueError('Passwords do not match')
+        return self
 
 class UserLogin(UserBase):
     password: str

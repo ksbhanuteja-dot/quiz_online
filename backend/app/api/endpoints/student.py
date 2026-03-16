@@ -9,7 +9,7 @@ from app.models.attempt import Attempt
 from app.models.answer import StudentAnswer
 from app.models.option import Option
 from app.schemas.quiz import QuizResponseSchema, QuizSimple
-from app.schemas.attempt import AttemptCreate, AttemptResponse, AttemptDetail
+from app.schemas.attempt import AttemptCreate, AttemptResponse, AttemptDetail, AttemptSummary
 from app.schemas.stats import StudentStats, LeaderboardEntry
 from sqlalchemy import func
 

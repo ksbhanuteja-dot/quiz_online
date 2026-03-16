@@ -132,7 +132,19 @@ def _parse_excel_quiz(file_contents: bytes):
     return questions
 
 
-@router.post("/quizzes/import", response_model=QuizResponseSchema)
+from app.schemas.quiz import QuizCreate, QuizResponseSchema, QuizSimple, ImportQuizResponse
+
+@router.get("/quizzes/import")
+def import_quiz_help(current_user: User = Depends(get_current_active_user)):
+    if current_user.role != "Instructor":
+        raise HTTPException(status_code=403, detail="Only instructors can access this")
+    return {
+        "message": "Send a POST request to this endpoint with form fields: title, timer, file (Excel .xlsx).",
+        "details": "Upload an Excel file with columns: Question, Option1..Option4, Correct (1-4 or A-D or option text).",
+    }
+
+
+@router.post("/quizzes/import", response_model=ImportQuizResponse)
 def import_quiz(
     title: str = Form(...),
     timer: int = Form(...),
@@ -160,7 +172,12 @@ def import_quiz(
 
     # Create quiz from parsed questions
     quiz_payload = QuizCreate(title=title, timer=timer, questions=questions)
-    return create_quiz(quiz_payload, db=db, current_user=current_user)
+    quiz = create_quiz(quiz_payload, db=db, current_user=current_user)
+
+    return {
+        "message": f"Imported {len(questions)} question(s) successfully.",
+        "quiz": quiz,
+    }
 
 @router.get("/quizzes/{id}", response_model=QuizResponseSchema)
 def get_quiz(id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):

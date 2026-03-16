@@ -9,6 +9,7 @@ export default function CreateQuiz() {
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState('');
   const [importError, setImportError] = useState('');
+  const [importResult, setImportResult] = useState(null);
   const [importFile, setImportFile] = useState(null);
   
   const [quizDetails, setQuizDetails] = useState({
@@ -47,15 +48,14 @@ export default function CreateQuiz() {
     formData.append('file', importFile);
 
     try {
-      await api.post('/instructor/quizzes/import', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      navigate('/dashboard/quizzes');
+      // Do not explicitly set Content-Type; let the browser set the boundary for multipart/form-data.
+      const response = await api.post('/instructor/quizzes/import', formData);
+      setImportError('');
+      setImportResult(response.data);
     } catch (err) {
       console.error('Failed to import quiz:', err);
-      setImportError(err.response?.data?.detail || 'Failed to import quiz. Please check the file format.');
+      setImportError(err.response?.data?.detail || err.response?.data?.message || 'Failed to import quiz. Please check the file format.');
+      setImportResult(null);
     } finally {
       setIsImporting(false);
     }
@@ -119,7 +119,7 @@ export default function CreateQuiz() {
 
     try {
       await api.post('/instructor/quizzes', payload);
-      navigate('/instructor-dashboard');
+      navigate('/dashboard');
     } catch (err) {
       console.error('Failed to create quiz:', err);
       setError(err.response?.data?.detail || 'Failed to create quiz.');
@@ -132,7 +132,7 @@ export default function CreateQuiz() {
     <div className="max-w-4xl mx-auto space-y-8 pb-20">
       <div className="flex items-center gap-4">
         <button 
-          onClick={() => navigate('/dashboard/quizzes')}
+          onClick={() => navigate('/dashboard')}
           className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
         >
           <ArrowLeft size={24} />
@@ -198,6 +198,35 @@ export default function CreateQuiz() {
           {importError && (
             <div className="mt-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-200">
               {importError}
+            </div>
+          )}
+
+          {importResult && (
+            <div className="mt-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+              <p className="text-sm text-emerald-800 font-semibold">{importResult.message}</p>
+              {importResult.quiz?.id && (
+                <p className="text-sm text-slate-700 mt-2">
+                  Quiz created: <span className="font-semibold">{importResult.quiz.title}</span> (ID: {importResult.quiz.id})
+                </p>
+              )}
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard/quizzes')}
+                  className="px-4 py-2 rounded-xl bg-primary-600 text-white hover:bg-primary-500 transition-colors"
+                >
+                  View all quizzes
+                </button>
+                {importResult.quiz?.id && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/dashboard/edit-quiz/${importResult.quiz.id}`)}
+                    className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    Edit imported quiz
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>

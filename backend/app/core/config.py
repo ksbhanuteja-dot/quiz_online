@@ -1,5 +1,10 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path
+from pydantic_settings import BaseSettings
 from typing import Optional
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+load_dotenv(BASE_DIR / ".env")
 
 class Settings(BaseSettings):
     DATABASE_URL: str
@@ -14,7 +19,5 @@ class Settings(BaseSettings):
     SMTP_USER: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
     EMAIL_FROM: Optional[str] = "no-reply@quizonline.local"
-
-    model_config = SettingsConfigDict(env_file=".env")
 
 settings = Settings()

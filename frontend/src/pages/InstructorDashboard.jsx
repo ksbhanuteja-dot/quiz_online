@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { FileText, Users, Target, TrendingUp, PlusCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { FileText, Users, Target, TrendingUp, PlusCircle, ArrowRight } from 'lucide-react';
 import api from '../api/axios';
 
 export default function InstructorDashboard() {
@@ -9,15 +10,19 @@ export default function InstructorDashboard() {
     averageScore: 0,
     activeStudents: 0
   });
+  const [recentQuizzes, setRecentQuizzes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Mock data for initial render or fallback
-    // Try fetching from API later
-    const fetchStats = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const response = await api.get('/instructor/stats');
-        setStats(response.data);
+        const [statsRes, quizzesRes] = await Promise.all([
+          api.get('/instructor/stats'),
+          api.get('/instructor/quizzes')
+        ]);
+        setStats(statsRes.data);
+        setRecentQuizzes(quizzesRes.data.slice(0, 5));
       } catch (err) {
         console.warn('Using mock data, API failed:', err);
         setStats({
@@ -31,7 +36,7 @@ export default function InstructorDashboard() {
       }
     };
 
-    fetchStats();
+    fetchDashboardData();
   }, []);
 
   const statCards = [
@@ -110,11 +115,33 @@ export default function InstructorDashboard() {
         <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
           <h2 className="text-lg font-bold text-slate-900 mb-4">Recent Quizzes</h2>
           {isLoading ? (
-             <div className="space-y-4">
-               {[1, 2, 3].map((i) => (
-                 <div key={i} className="h-16 bg-slate-50 rounded-xl animate-pulse"></div>
-               ))}
-             </div>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 bg-slate-50 rounded-xl animate-pulse"></div>
+              ))}
+            </div>
+          ) : recentQuizzes.length > 0 ? (
+            <div className="space-y-4">
+              {recentQuizzes.map((quiz) => (
+                <div key={quiz.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-primary-50 rounded-lg text-primary-600">
+                      <FileText size={20} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">{quiz.title}</p>
+                      <p className="text-sm text-slate-500">{quiz.questionsCount || 0} Questions • {Math.floor(quiz.timer / 60)} mins</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => navigate(`/dashboard/edit-quiz/${quiz.id}`)}
+                    className="p-2 text-slate-400 hover:text-primary-600 transition-colors"
+                  >
+                    <ArrowRight size={20} />
+                  </button>
+                </div>
+              ))}
+            </div>
           ) : (
              <div className="text-center py-10">
                <div className="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
@@ -129,7 +156,10 @@ export default function InstructorDashboard() {
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
           <h2 className="text-lg font-bold text-slate-900 mb-4">Quick Actions</h2>
           <div className="space-y-3">
-             <button className="w-full text-left px-4 py-3 rounded-xl border border-dashed border-slate-300 hover:border-primary-500 hover:bg-primary-50 transition-colors flex items-center gap-3">
+             <button 
+               onClick={() => navigate('/dashboard/create-quiz')}
+               className="w-full text-left px-4 py-3 rounded-xl border border-dashed border-slate-300 hover:border-primary-500 hover:bg-primary-50 transition-colors flex items-center gap-3"
+             >
                <PlusCircle size={20} className="text-primary-600" />
                <span className="font-medium text-slate-700 block">Create new quiz</span>
              </button>

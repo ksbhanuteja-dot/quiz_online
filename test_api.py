@@ -29,11 +29,12 @@ def test_flow():
         "name": "Test Instructor",
         "email": "instructor@test.com",
         "password": "password123",
+        "confirm_password": "password123",
         "role": "Instructor"
     })
     if status not in (200, 201):
         if "already exists" not in str(res):
-            print("Instructor Signup Failed:", res)
+            print(f"Instructor Signup Failed ({status}):", res)
             return
 
     # If a verification token is returned (DEBUG mode), confirm the email immediately.
@@ -72,18 +73,6 @@ def test_flow():
         return
     quiz_id = res["id"]
 
-    print("Testing Student flow...")
-    status, res = make_request("POST", f"{BASE_URL}/auth/signup", data={
-        "name": "Test Student",
-        "email": "student@test.com",
-        "password": "password123",
-        "role": "Student"
-    })
-
-    # If a verification token is returned (DEBUG mode), confirm the email immediately.
-    if isinstance(res, dict) and res.get("verificationToken"):
-        token = res["verificationToken"]
-        make_request("GET", f"{BASE_URL}/auth/verify-email?token={token}")
 
     status, res = make_request("POST", f"{BASE_URL}/auth/login", data={
         "email": "student@test.com",

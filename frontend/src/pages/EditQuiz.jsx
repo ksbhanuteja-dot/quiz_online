@@ -76,7 +76,7 @@ export default function EditQuiz() {
 
     try {
       await api.put(`/instructor/quizzes/${id}`, payload);
-      navigate('/instructor-dashboard');
+      navigate('/dashboard');
     } catch (err) {
       console.error(err);
       setError('Failed to update quiz on server.');

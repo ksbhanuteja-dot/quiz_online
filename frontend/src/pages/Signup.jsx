@@ -9,6 +9,7 @@ export default function Signup() {
     name: '',
     email: '',
     password: '',
+    confirmPassword: '',
     role: 'Student'
   });
   const [error, setError] = useState('');
@@ -23,15 +24,28 @@ export default function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const response = await api.post('/auth/signup', formData);
+      const { name, email, password, confirmPassword, role } = formData;
+      const response = await api.post('/auth/signup', {
+        name,
+        email,
+        password,
+        confirm_password: confirmPassword,
+        role,
+      });
       
       if (response.data?.message) {
         setSuccessMessage(response.data.message);
       } else {
-        setError("Invalid response from server");
+        setError('Invalid response from server');
       }
     } catch (err) {
       setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to create account. Please try again.');
@@ -64,8 +78,9 @@ export default function Signup() {
                 <div className="p-6 rounded-2xl border border-emerald-200 bg-emerald-50">
                   <h3 className="text-lg font-semibold text-emerald-800">Account created!</h3>
                   <p className="mt-2 text-sm text-emerald-700">
-                    {successMessage} You can now <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">sign in</Link>.
+                    Account created! You can now <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">sign in</Link>.
                   </p>
+
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
@@ -116,6 +131,24 @@ export default function Signup() {
                         type="password"
                         required
                         value={formData.password}
+                        onChange={handleChange}
+                        className="block w-full rounded-xl border-0 py-3 px-4 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 transition-all"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700">
+                      Confirm password
+                    </label>
+                    <div className="mt-2">
+                      <input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        required
+                        value={formData.confirmPassword}
                         onChange={handleChange}
                         className="block w-full rounded-xl border-0 py-3 px-4 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 transition-all"
                         placeholder="••••••••"

@@ -3,13 +3,17 @@ from email.message import EmailMessage
 from app.core.config import settings
 
 
-def send_email(subject: str, recipient: str, body: str) -> bool:
+def send_email(subject: str, recipient: str, body: str, html_body: str | None = None) -> bool:
     """Send an email. Returns True if sent or simulated."""
     message = EmailMessage()
     message["Subject"] = subject
     message["From"] = settings.EMAIL_FROM or "no-reply@quizonline.local"
     message["To"] = recipient
     message.set_content(body)
+
+    # Add HTML alternative if provided (for clickable buttons/links).
+    if html_body:
+        message.add_alternative(html_body, subtype="html")
 
     if not settings.SMTP_HOST or not settings.SMTP_PORT:
         # Fallback: print to console so devs can copy/paste link
@@ -21,7 +25,9 @@ def send_email(subject: str, recipient: str, body: str) -> bool:
 
     try:
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
-            smtp.starttls()
+            # Some debug/test SMTP servers (e.g., aiosmtpd) do not support STARTTLS.
+            if smtp.has_extn('starttls'):
+                smtp.starttls()
             if settings.SMTP_USER and settings.SMTP_PASSWORD:
                 smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
             smtp.send_message(message)

@@ -27,9 +27,9 @@ export default function TakeQuiz() {
           title: 'React Performance Optimization',
           timer: 600, // 10 mins
           questions: [
-            { id: 1, text: 'Which hook should you use to memoize a computationally expensive pure function?', options: ['useState', 'useEffect', 'useMemo', 'useCallback'] },
-            { id: 2, text: 'What does React.memo do?', options: ['Memoizes a function', 'Prevents re-rendering of a component if props did not change', 'Memoizes state', 'None of the above'] },
-            { id: 3, text: 'Why might using index as a key in a mapped list be bad for performance?', options: ['It throws an error', 'It can cause React to unnecessarily re-render or mix up UI state on reorder', 'It uses more memory', 'Keys must be strings'] }
+            { id: 1, question_text: 'Which hook should you use to memoize a computationally expensive pure function?', options: [{id: 11, option_text: 'useState'}, {id: 12, option_text: 'useEffect'}, {id: 13, option_text: 'useMemo'}, {id: 14, option_text: 'useCallback'}] },
+            { id: 2, question_text: 'What does React.memo do?', options: [{id: 21, option_text: 'Memoizes a function'}, {id: 22, option_text: 'Prevents re-rendering of a component if props did not change'}, {id: 23, option_text: 'Memoizes state'}, {id: 24, option_text: 'None of the above'}] },
+            { id: 3, question_text: 'Why might using index as a key in a mapped list be bad for performance?', options: [{id: 31, option_text: 'It throws an error'}, {id: 32, option_text: 'It can cause React to unnecessarily re-render or mix up UI state on reorder'}, {id: 33, option_text: 'It uses more memory'}, {id: 34, option_text: 'Keys must be strings'}] }
           ]
         };
         setQuiz(mockQuiz);
@@ -127,7 +127,7 @@ export default function TakeQuiz() {
 
       <div className="mt-8 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-sm transition-colors">
         <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white leading-relaxed mb-8">
-          {currentQuestionIndex + 1}. {currentQuestion.text}
+          {currentQuestionIndex + 1}. {currentQuestion.question_text}
         </h2>
 
         <div className="space-y-4">
@@ -147,7 +147,7 @@ export default function TakeQuiz() {
                   {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
                 </div>
                 <span className={`flex-1 text-base sm:text-lg ${isSelected ? 'text-primary-900 dark:text-primary-100 font-medium' : 'text-slate-700 dark:text-slate-300'}`}>
-                  {option}
+                  {option.option_text}
                 </span>
               </button>
             );

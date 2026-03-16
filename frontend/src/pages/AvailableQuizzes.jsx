@@ -17,9 +17,9 @@ export default function AvailableQuizzes() {
       } catch (err) {
         console.warn('Using mock available quizzes:', err);
         setQuizzes([
-          { id: 101, title: 'React Performance Optimization', timer: 1200, questionsCount: 10, instructor: 'Alice Freeman' },
-          { id: 102, title: 'Node.js Security Best Practices', timer: 2400, questionsCount: 20, instructor: 'Bob Johnson' },
-          { id: 103, title: 'Advanced CSS Layouts', timer: 1800, questionsCount: 15, instructor: 'Charlie Davis' },
+          { id: 101, title: 'React Performance Optimization', timer: 1200, questions_count: 10, instructor_name: 'Alice Freeman' },
+          { id: 102, title: 'Node.js Security Best Practices', timer: 2400, questions_count: 20, instructor_name: 'Bob Johnson' },
+          { id: 103, title: 'Advanced CSS Layouts', timer: 1800, questions_count: 15, instructor_name: 'Charlie Davis' },
         ]);
       } finally {
         setIsLoading(false);
@@ -74,7 +74,7 @@ export default function AvailableQuizzes() {
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors mb-2">
                   {quiz.title}
                 </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Instructor: {quiz.instructor}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Instructor: {quiz.instructor_name}</p>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
@@ -83,7 +83,7 @@ export default function AvailableQuizzes() {
                   </div>
                   <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                     <FileText size={16} className="text-indigo-500" />
-                    <span className="text-sm font-medium">{quiz.questionsCount} Questions</span>
+                    <span className="text-sm font-medium">{quiz.questions_count} Questions</span>
                   </div>
                 </div>
               </div>

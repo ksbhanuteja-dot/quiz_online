@@ -109,7 +109,7 @@ export default function QuizList() {
                   </div>
                   <div className="flex items-center gap-2 text-slate-600">
                     <FileText size={16} className="text-slate-400" />
-                    <span className="text-sm font-medium">{quiz.questionsCount} Qs</span>
+                    <span className="text-sm font-medium">{quiz.questions_count || quiz.questionsCount || 0} Qs</span>
                   </div>
                   <div className="flex items-center gap-2 text-slate-600 col-span-2">
                     <Users size={16} className="text-slate-400" />
@@ -119,7 +119,7 @@ export default function QuizList() {
               </div>
               
               <div className="mt-6 pt-6 border-t border-slate-100 text-xs text-slate-500 font-medium tracking-wide uppercase text-center">
-                Created: {new Date(quiz.createdAt).toLocaleDateString()}
+                Created: {quiz.created_at ? new Date(quiz.created_at).toLocaleDateString() : 'Now'}
               </div>
             </div>
           ))}
