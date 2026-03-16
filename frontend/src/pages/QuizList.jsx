@@ -5,6 +5,7 @@ import api from '../api/axios';
 
 export default function QuizList() {
   const [quizzes, setQuizzes] = useState([]);
+  const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -16,14 +17,11 @@ export default function QuizList() {
     try {
       const response = await api.get('/instructor/quizzes/');
       setQuizzes(response.data || []);
+      setError(null); // Clear any previous errors on success
     } catch (err) {
-      console.warn("Using mock quizzes due to API failure:", err);
-      // Mock data for display
-      setQuizzes([
-        { id: 1, title: 'React Fundamentals', timer: 1800, questionsCount: 15, attempts: 120, createdAt: '2023-11-20' },
-        { id: 2, title: 'Advanced Tailwind CSS', timer: 2400, questionsCount: 20, attempts: 85, createdAt: '2023-11-22' },
-        { id: 3, title: 'JavaScript Closures', timer: 900, questionsCount: 10, attempts: 210, createdAt: '2023-11-25' },
-      ]);
+      console.error("Failed to fetch quizzes:", err);
+      setError(err.response?.data?.detail || "Failed to fetch quizzes. Please try again later.");
+      setQuizzes([]); // Clear quizzes on error
     } finally {
       setIsLoading(false);
     }
@@ -44,6 +42,12 @@ export default function QuizList() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-200 mb-6">
+          {error}
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">My Quizzes</h1>

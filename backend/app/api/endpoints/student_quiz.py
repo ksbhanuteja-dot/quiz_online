@@ -98,7 +98,9 @@ def submit_quiz_attempt(
     db: Session = Depends(get_db), 
     current_user: User = Depends(require_role("Student"))
 ):
-    quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
+    quiz = db.query(Quiz).options(
+        joinedload(Quiz.questions).joinedload(Question.options)
+    ).filter(Quiz.id == quiz_id).first()
     attempt = db.query(Attempt).filter(
         Attempt.quiz_id == quiz_id,
         Attempt.student_id == current_user.id,

@@ -62,7 +62,8 @@ export default function TakeQuiz() {
 
     try {
       const response = await api.post(`/student/quizzes/${id}/submit`, payload);
-      navigate(`/student-dashboard/results/${response.data.attemptId}`, { state: { result: response.data } });
+      const resultData = response.data;
+      navigate(`/student-dashboard/results/${resultData.id}`, { state: { result: resultData } });
     } catch (err) {
       console.warn('Mocking submission:', err);
       // Mock result processing

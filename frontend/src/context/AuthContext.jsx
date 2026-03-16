@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
     
-    if (userData.role === 'instructor' || userData.role === 'Instructor') {
+    if (userData.role?.toLowerCase() === 'instructor') {
       navigate('/dashboard');
     } else {
       navigate('/student-dashboard');

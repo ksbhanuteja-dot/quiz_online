@@ -20,13 +20,8 @@ export default function InstructorDashboard() {
         const response = await api.get('/instructor/analytics/stats');
         setStats(response.data);
       } catch (err) {
-        console.warn('Using mock data, API failed:', err);
-        setStats({
-          totalQuizzes: 12,
-          totalAttempts: 348,
-          averageScore: 76.5,
-          activeStudents: 45
-        });
+        console.warn('API failed:', err);
+        setStats(null);
       } finally {
         setIsLoading(false);
       }

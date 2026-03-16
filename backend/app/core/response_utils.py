@@ -8,6 +8,8 @@ class APIResponse(BaseModel, Generic[T]):
     data: Optional[T] = None
     error: Optional[str] = None
 
+    model_config = {"from_attributes": True}
+
 def success_response(data: T = None):
     return {"success": True, "data": data, "error": None}
 

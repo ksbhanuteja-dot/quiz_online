@@ -20,7 +20,7 @@ export default function Login() {
       // Step 1: Login to get the JWT token
       // Backend now accepts JSON { email, password }
       const tokenRes = await api.post('/login', { email, password });
-      const token = tokenRes.data.token || tokenRes.data.access_token;
+      const token = tokenRes.data?.token || tokenRes.data?.access_token;
 
       if (!token) {
         setError("Invalid response from server: no token received.");

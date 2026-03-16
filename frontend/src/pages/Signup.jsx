@@ -32,7 +32,7 @@ export default function Signup() {
       };
       const response = await api.post('/signup', payload);
       
-      // The backend now returns user info + token together for auto-login
+      // The backend response is unwrapped by the axios interceptor
       const data = response.data;
       if (data && data.access_token) {
         const token = data.access_token;
@@ -132,7 +132,7 @@ export default function Signup() {
                       id="role"
                       name="role"
                       value={formData.role}
-                      onChange={handleChange}
+                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                       className="block w-full rounded-xl border-0 py-3 px-4 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 transition-all bg-white"
                     >
                       <option value="student">Student</option>

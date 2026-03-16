@@ -59,4 +59,8 @@ app.include_router(api_router)
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to the Online Quizzing Application API"}
+    return {"message": "Welcome to the Online Quizzing Application API", "status": "active"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
