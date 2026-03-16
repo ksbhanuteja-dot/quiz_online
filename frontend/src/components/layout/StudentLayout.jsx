@@ -64,7 +64,7 @@ export default function StudentLayout() {
                     }
                   `}
                 >
-                  <Icon size={20} className={({ isActive }) => isActive ? 'text-primary-600 dark:text-primary-400' : 'text-slate-400'} />
+                  <Icon size={20} className="text-slate-400" />
                   {item.name}
                 </NavLink>
               );
