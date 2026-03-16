@@ -9,7 +9,7 @@ from app.models.attempt import Attempt
 from app.models.answer import StudentAnswer
 from app.models.option import Option
 from app.schemas.quiz import QuizResponseSchema, QuizSimple
-from app.schemas.attempt import AttemptCreate, AttemptResponse
+from app.schemas.attempt import AttemptCreate, AttemptResponse, AttemptDetail
 from app.schemas.stats import StudentStats, LeaderboardEntry
 from sqlalchemy import func
 
@@ -54,14 +54,27 @@ def submit_quiz(id: int, attempt_in: AttemptCreate, db: Session = Depends(get_db
     db.refresh(db_attempt)
 
     for question in quiz.questions:
+        # Accept both string and integer keys for question IDs (from frontend send)
         selected_option_index = attempt_in.answers.get(str(question.id))
+        if selected_option_index is None:
+            selected_option_index = attempt_in.answers.get(question.id)
+
         if selected_option_index is not None:
+            try:
+                selected_option_index = int(selected_option_index)
+            except (TypeError, ValueError):
+                continue
+
             # Our frontend sends index (0-3), but backend stores is_correct on Option model.
             # We need to find the option at that index for that question.
             options = db.query(Option).filter(Option.question_id == question.id).all()
             if 0 <= selected_option_index < len(options):
                 selected_option = options[selected_option_index]
-                db_answer = StudentAnswer(attempt_id=db_attempt.id, question_id=question.id, selected_option_id=selected_option.id)
+                db_answer = StudentAnswer(
+                    attempt_id=db_attempt.id,
+                    question_id=question.id,
+                    selected_option_id=selected_option.id,
+                )
                 db.add(db_answer)
                 if selected_option.is_correct:
                     correct_count += 1
@@ -77,6 +90,45 @@ def submit_quiz(id: int, attempt_in: AttemptCreate, db: Session = Depends(get_db
         "correctCount": correct_count,
         "totalQuestions": total_questions,
         "quizTitle": quiz.title
+    }
+
+
+@router.get("/attempts/{attempt_id}", response_model=AttemptDetail)
+def get_attempt_details(attempt_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    attempt = db.query(Attempt).filter(Attempt.id == attempt_id, Attempt.student_id == current_user.id).first()
+    if not attempt:
+        raise HTTPException(status_code=404, detail="Attempt not found")
+
+    questions = []
+    for answer in attempt.answers:
+        question = answer.question
+        correct_option = next((opt for opt in question.options if opt.is_correct), None)
+        options = []
+        for opt in question.options:
+            options.append({
+                "id": opt.id,
+                "optionText": opt.option_text,
+                "isCorrect": opt.is_correct,
+                "isSelected": opt.id == answer.selected_option_id,
+            })
+
+        questions.append({
+            "questionId": question.id,
+            "questionText": question.question_text,
+            "options": options,
+            "selectedOptionId": answer.selected_option_id,
+            "correctOptionId": correct_option.id if correct_option else None,
+            "isCorrect": answer.selected_option_id == (correct_option.id if correct_option else None),
+        })
+
+    return {
+        "attemptId": attempt.id,
+        "quizTitle": attempt.quiz.title,
+        "score": attempt.score,
+        "correctCount": sum(1 for q in questions if q["isCorrect"]),
+        "totalQuestions": len(questions),
+        "completedAt": attempt.completed_at,
+        "questions": questions,
     }
 
 @router.get("/stats", response_model=StudentStats)

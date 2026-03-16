@@ -8,12 +8,17 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [canResend, setCanResend] = useState(false);
   const { login } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setInfoMessage('');
+    setCanResend(false);
     setIsLoading(true);
 
     try {
@@ -28,9 +33,30 @@ export default function Login() {
         setError("Invalid response from server");
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to login. Please check your credentials.');
+      const serverMessage = err.response?.data?.message || err.response?.data?.detail;
+      const message = serverMessage || 'Failed to login. Please check your credentials.';
+      setError(message);
+      if (message.toLowerCase().includes('email not verified')) {
+        setCanResend(true);
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    setError('');
+    setInfoMessage('');
+
+    try {
+      const response = await api.post('/auth/resend-verification', { email });
+      setInfoMessage(response.data?.message || 'Verification email sent.');
+      setCanResend(false);
+    } catch (err) {
+      setError(err.response?.data?.detail || err.response?.data?.message || 'Unable to resend verification email.');
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -97,6 +123,23 @@ export default function Login() {
                   <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-200">
                     {error}
                   </div>
+                )}
+
+                {infoMessage && (
+                  <div className="p-3 bg-emerald-50 text-emerald-700 text-sm rounded-lg border border-emerald-200">
+                    {infoMessage}
+                  </div>
+                )}
+
+                {canResend && (
+                  <button
+                    type="button"
+                    disabled={resendLoading}
+                    onClick={handleResendVerification}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 transition-all disabled:opacity-70"
+                  >
+                    {resendLoading ? <Loader size={20} className="animate-spin" /> : 'Resend verification email'}
+                  </button>
                 )}
 
                 <div>

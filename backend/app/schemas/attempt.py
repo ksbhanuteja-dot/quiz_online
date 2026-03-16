@@ -37,3 +37,32 @@ class AttemptResponse(BaseModel):
     correctCount: int
     totalQuestions: int
     quizTitle: str
+
+
+class OptionResult(BaseModel):
+    id: int
+    optionText: str
+    isCorrect: bool
+    isSelected: bool
+
+
+class QuestionResult(BaseModel):
+    questionId: int
+    questionText: str
+    options: list[OptionResult]
+    selectedOptionId: int | None
+    correctOptionId: int | None
+    isCorrect: bool
+
+
+class AttemptDetail(BaseModel):
+    attemptId: int
+    quizTitle: str
+    score: int
+    correctCount: int
+    totalQuestions: int
+    completedAt: datetime
+    questions: list[QuestionResult]
+
+    class Config:
+        from_attributes = True

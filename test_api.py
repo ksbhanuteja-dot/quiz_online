@@ -36,6 +36,11 @@ def test_flow():
             print("Instructor Signup Failed:", res)
             return
 
+    # If a verification token is returned (DEBUG mode), confirm the email immediately.
+    if isinstance(res, dict) and res.get("verificationToken"):
+        token = res["verificationToken"]
+        make_request("GET", f"{BASE_URL}/auth/verify-email?token={token}")
+
     print("Testing Instructor Login...")
     status, res = make_request("POST", f"{BASE_URL}/auth/login", data={
         "email": "instructor@test.com",
@@ -74,6 +79,12 @@ def test_flow():
         "password": "password123",
         "role": "Student"
     })
+
+    # If a verification token is returned (DEBUG mode), confirm the email immediately.
+    if isinstance(res, dict) and res.get("verificationToken"):
+        token = res["verificationToken"]
+        make_request("GET", f"{BASE_URL}/auth/verify-email?token={token}")
+
     status, res = make_request("POST", f"{BASE_URL}/auth/login", data={
         "email": "student@test.com",
         "password": "password123"

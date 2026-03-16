@@ -34,3 +34,7 @@ class TokenData(BaseModel):
 class UserWithToken(BaseModel):
     token: str
     user: UserResponse
+
+class SignupResponse(BaseModel):
+    message: str
+    user: UserResponse
