@@ -50,6 +50,7 @@ export default function QuizResult() {
   }
 
   const isPassed = result.score >= 70;
+  const scoreClass = result.score >= 80 ? 'text-emerald-600 dark:text-emerald-400' : result.score >= 60 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
 
   return (
     <div className="max-w-4xl mx-auto py-12">
@@ -68,7 +69,7 @@ export default function QuizResult() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-lg mx-auto mb-12">
           <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
             <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Final Score</p>
-            <p className={`text-4xl font-bold ${isPassed ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+            <p className={`text-4xl font-bold ${scoreClass}`}>
               {result.score}%
             </p>
           </div>

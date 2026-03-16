@@ -1,4 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
+import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { Target, TrendingUp, Clock, FileText, CheckCircle2 } from 'lucide-react';
 import { 
@@ -14,13 +15,18 @@ export default function StudentDashboard() {
     highestScore: 0,
     recentScores: []
   });
+  const [attempts, setAttempts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await api.get('/student/stats');
-        setStats(response.data);
+        const [statsRes, attemptsRes] = await Promise.all([
+          api.get('/student/stats'),
+          api.get('/student/attempts'),
+        ]);
+        setStats(statsRes.data);
+        setAttempts(attemptsRes.data);
       } catch (err) {
         console.warn('Using mock data for student dashboard:', err);
         // Fallback mock data
@@ -36,6 +42,11 @@ export default function StudentDashboard() {
             { quizName: 'Tailwind', score: 98, date: '11/20' },
           ]
         });
+        setAttempts([
+          { attemptId: 1, quizTitle: 'React Basics', score: 75, completedAt: '2026-03-01T10:00:00' },
+          { attemptId: 2, quizTitle: 'Hooks', score: 85, completedAt: '2026-03-05T10:00:00' },
+          { attemptId: 3, quizTitle: 'Router', score: 90, completedAt: '2026-03-10T10:00:00' },
+        ]);
       } finally {
         setIsLoading(false);
       }
@@ -51,10 +62,16 @@ export default function StudentDashboard() {
     );
   }
 
+  const scoreColor = (score) => {
+    if (score >= 80) return 'text-emerald-600 dark:text-emerald-400';
+    if (score >= 60) return 'text-amber-600 dark:text-amber-400';
+    return 'text-red-600 dark:text-red-400';
+  };
+
   const statCards = [
     { name: 'Quizzes Completed', value: stats?.totalAttempted ?? 0, icon: FileText, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/30' },
-    { name: 'Average Score', value: `${stats?.averageScore ?? 0}%`, icon: Target, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
-    { name: 'Highest Score', value: `${stats?.highestScore ?? 0}%`, icon: TrophyIcon, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/30' }
+    { name: 'Average Score', value: `${stats?.averageScore ?? 0}%`, icon: Target, color: scoreColor(stats?.averageScore ?? 0), bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
+    { name: 'Highest Score', value: `${stats?.highestScore ?? 0}%`, icon: TrophyIcon, color: scoreColor(stats?.highestScore ?? 0), bg: 'bg-amber-50 dark:bg-amber-900/30' }
   ];
 
   return (
@@ -124,33 +141,52 @@ export default function StudentDashboard() {
         </div>
 
         {/* Recent Activity Mini-list */}
-  <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Recent Activity</h2>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Recent Attempts</h2>
           {isLoading ? (
             <div className="space-y-4">
-               {[1, 2, 3].map((i) => <div key={i} className="h-16 bg-slate-50 dark:bg-slate-800 rounded-xl animate-pulse"></div>)}
-            </div>
-          ) : (stats?.recentScores && stats.recentScores.length > 0) ? (
-            <div className="space-y-4">
-              {stats.recentScores.slice().reverse().slice(0, 4).map((quiz, i) => (
-                <div key={i} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                  <div className="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-lg text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle2 size={20} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{quiz.quizName}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
-                      <Clock size={12} /> {quiz.date}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-sm font-bold text-slate-900 dark:text-white">{quiz.score}%</span>
-                  </div>
-                </div>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 bg-slate-50 dark:bg-slate-800 rounded-xl animate-pulse"></div>
               ))}
             </div>
+          ) : attempts.length > 0 ? (
+            <div className="space-y-4">
+              {attempts.slice(0, 5).map((attempt) => {
+                const score = attempt.score ?? 0;
+                const scoreColor = score >= 80 ? 'text-emerald-700' : score >= 60 ? 'text-amber-600' : 'text-red-600';
+                return (
+                  <div
+                    key={attempt.attemptId}
+                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{attempt.quizTitle}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                        <Clock size={12} /> {new Date(attempt.completedAt).toLocaleDateString()}
+                      </p>
+                      <div className="mt-2 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${score >= 80 ? 'bg-emerald-500' : score >= 60 ? 'bg-amber-500' : 'bg-red-500'}`}
+                          style={{ width: `${Math.min(Math.max(score, 0), 100)}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-2">
+                      <span className={`text-sm font-bold ${scoreColor}`}>{score}%</span>
+                      <Link
+                        to={`/student-dashboard/results/${attempt.attemptId}`}
+                        className="text-xs font-semibold text-primary-600 hover:text-primary-500"
+                      >
+                        View details
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
-            <div className="py-8 text-center text-sm text-slate-500">No recent activity.</div>
+            <div className="py-8 text-center text-sm text-slate-500">No attempts recorded yet.</div>
           )}
         </div>
       </div>

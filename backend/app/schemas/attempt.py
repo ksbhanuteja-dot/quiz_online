@@ -55,6 +55,16 @@ class QuestionResult(BaseModel):
     isCorrect: bool
 
 
+class AttemptSummary(BaseModel):
+    attemptId: int
+    quizTitle: str
+    score: int
+    completedAt: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class AttemptDetail(BaseModel):
     attemptId: int
     quizTitle: str

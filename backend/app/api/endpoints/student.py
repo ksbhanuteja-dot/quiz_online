@@ -144,7 +144,7 @@ def get_student_stats(db: Session = Depends(get_db), current_user: User = Depend
         recent_scores.append({
             "quizName": a.quiz.title,
             "score": a.score,
-            "date": a.completed_at.strftime("%m/%d")
+            "date": a.completed_at.strftime("%m/%d"),
         })
         
     return {
@@ -153,6 +153,26 @@ def get_student_stats(db: Session = Depends(get_db), current_user: User = Depend
         "highestScore": highest_score,
         "recentScores": recent_scores
     }
+
+
+@router.get("/attempts", response_model=List[AttemptSummary])
+def get_student_attempts(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    attempts = (
+        db.query(Attempt)
+        .filter(Attempt.student_id == current_user.id)
+        .order_by(Attempt.completed_at.desc())
+        .all()
+    )
+
+    return [
+        {
+            "attemptId": a.id,
+            "quizTitle": a.quiz.title,
+            "score": a.score,
+            "completedAt": a.completed_at,
+        }
+        for a in attempts
+    ]
 
 @router.get("/leaderboard", response_model=List[LeaderboardEntry])
 def get_student_leaderboard(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):

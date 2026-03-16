@@ -6,7 +6,10 @@ import api from '../api/axios';
 export default function CreateQuiz() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState('');
+  const [importError, setImportError] = useState('');
+  const [importFile, setImportFile] = useState(null);
   
   const [quizDetails, setQuizDetails] = useState({
     title: '',
@@ -22,6 +25,40 @@ export default function CreateQuiz() {
 
   const handleQuizDetailChange = (e) => {
     setQuizDetails({ ...quizDetails, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = (e) => {
+    setImportError('');
+    const file = e.target.files?.[0];
+    setImportFile(file || null);
+  };
+
+  const handleImport = async () => {
+    if (!importFile) {
+      return setImportError('Please select an Excel file first.');
+    }
+
+    setImportError('');
+    setIsImporting(true);
+
+    const formData = new FormData();
+    formData.append('title', quizDetails.title || 'Imported Quiz');
+    formData.append('timer', quizDetails.timer);
+    formData.append('file', importFile);
+
+    try {
+      await api.post('/instructor/quizzes/import', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      navigate('/dashboard/quizzes');
+    } catch (err) {
+      console.error('Failed to import quiz:', err);
+      setImportError(err.response?.data?.detail || 'Failed to import quiz. Please check the file format.');
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   const handleAddQuestion = () => {
@@ -133,6 +170,36 @@ export default function CreateQuiz() {
               <p className="mt-2 text-xs text-slate-500">{Math.floor(quizDetails.timer / 60)} minutes</p>
             </div>
           </div>
+        </div>
+
+        {/* Import from Excel */}
+        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-100">
+          <h2 className="text-xl font-bold text-slate-900 mb-4">Import Questions from Excel</h2>
+          <p className="text-sm text-slate-600 mb-4">
+            Upload an Excel file where each row is a question and includes columns for
+            Question, Option1...Option4, and Correct (1-4 or A-D or option text).
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 items-start">
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleFileChange}
+              className="w-full sm:w-auto rounded-xl border border-slate-300 px-4 py-3 bg-white"
+            />
+            <button
+              type="button"
+              onClick={handleImport}
+              disabled={isImporting}
+              className="flex items-center justify-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-500 transition-colors disabled:opacity-70"
+            >
+              {isImporting ? 'Importing...' : 'Import from Excel'}
+            </button>
+          </div>
+          {importError && (
+            <div className="mt-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-200">
+              {importError}
+            </div>
+          )}
         </div>
 
         {/* Questions Setup */}

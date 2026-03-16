@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from io import BytesIO
+
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.database import get_db
 from app.api.dependencies import get_current_active_user
 from app.models.user import User
@@ -11,6 +13,8 @@ from app.models.attempt import Attempt
 from app.schemas.quiz import QuizCreate, QuizResponseSchema, QuizSimple
 from app.schemas.stats import InstructorStats, LeaderboardEntry
 from sqlalchemy import func
+
+from openpyxl import load_workbook
 
 router = APIRouter()
 
@@ -54,6 +58,109 @@ def create_quiz(quiz_in: QuizCreate, db: Session = Depends(get_db), current_user
     db.commit()
     db.refresh(db_quiz)
     return db_quiz
+
+
+def _parse_excel_quiz(file_contents: bytes):
+    """Parse Excel file into (questions list)."""
+    wb = load_workbook(filename=BytesIO(file_contents), read_only=True)
+    ws = wb.active
+
+    # Expect header row
+    headers = [str(cell.value).strip().lower() if cell.value else '' for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+
+    # Common fields
+    question_idx = None
+    option_cols = []
+    correct_col = None
+
+    for i, h in enumerate(headers):
+        if h in ("question", "question_text", "question text"):
+            question_idx = i
+        elif h in ("option1", "option 1", "option_1", "a"):
+            option_cols.append(i)
+        elif h in ("option2", "option 2", "option_2", "b"):
+            option_cols.append(i)
+        elif h in ("option3", "option 3", "option_3", "c"):
+            option_cols.append(i)
+        elif h in ("option4", "option 4", "option_4", "d"):
+            option_cols.append(i)
+        elif h in ("correct", "correct_option", "correct option", "answer"):
+            correct_col = i
+
+    if question_idx is None or not option_cols or correct_col is None:
+        raise ValueError("Excel must include columns: Question, Option1..Option4, Correct (1-4 or A-D or text)")
+
+    questions = []
+
+    for row in ws.iter_rows(min_row=2):
+        question_text = (row[question_idx].value or "").strip()
+        if not question_text:
+            continue
+
+        options = []
+        for opt_i in option_cols:
+            val = row[opt_i].value
+            if val is None:
+                options.append("")
+            else:
+                options.append(str(val).strip())
+
+        # Determine correct index
+        correct_raw = row[correct_col].value
+        correct_index = None
+        if correct_raw is not None:
+            raw_str = str(correct_raw).strip()
+            if raw_str.isdigit():
+                idx = int(raw_str) - 1
+                if 0 <= idx < len(options):
+                    correct_index = idx
+            elif len(raw_str) == 1 and raw_str.upper() in "ABCD":
+                idx = ord(raw_str.upper()) - 65
+                if 0 <= idx < len(options):
+                    correct_index = idx
+            else:
+                for opt_idx, opt in enumerate(options):
+                    if opt and opt.lower() == raw_str.lower():
+                        correct_index = opt_idx
+                        break
+
+        questions.append({
+            "question_text": question_text,
+            "options": [{"option_text": opt, "is_correct": idx == correct_index} for idx, opt in enumerate(options) if opt],
+        })
+
+    return questions
+
+
+@router.post("/quizzes/import", response_model=QuizResponseSchema)
+def import_quiz(
+    title: str = Form(...),
+    timer: int = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    if current_user.role != "Instructor":
+        raise HTTPException(status_code=403, detail="Only instructors can import quizzes")
+
+    if file.content_type not in (
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-excel",
+    ):
+        raise HTTPException(status_code=400, detail="Invalid file type. Upload an Excel (.xlsx) file.")
+
+    try:
+        contents = file.file.read()
+        questions = _parse_excel_quiz(contents)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to parse Excel file: {e}")
+
+    if not questions:
+        raise HTTPException(status_code=400, detail="No questions found in the uploaded file.")
+
+    # Create quiz from parsed questions
+    quiz_payload = QuizCreate(title=title, timer=timer, questions=questions)
+    return create_quiz(quiz_payload, db=db, current_user=current_user)
 
 @router.get("/quizzes/{id}", response_model=QuizResponseSchema)
 def get_quiz(id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
