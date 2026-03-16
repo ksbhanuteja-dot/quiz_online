@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, Users, Target, TrendingUp } from 'lucide-react';
+import { FileText, Users, Target, TrendingUp, PlusCircle } from 'lucide-react';
 import api from '../api/axios';
 
 export default function InstructorDashboard() {
