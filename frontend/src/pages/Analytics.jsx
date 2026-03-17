@@ -12,8 +12,8 @@ export default function Analytics() {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const response = await api.get('/instructor/analytics');
-        setData(response.data);
+        const data = await api.get('/instructor/analytics');
+        setData(data);
       } catch (err) {
         console.warn("Using mock analytics:", err);
         setData({

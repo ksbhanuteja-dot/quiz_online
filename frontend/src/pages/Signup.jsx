@@ -9,6 +9,7 @@ export default function Signup() {
     name: '',
     email: '',
     password: '',
+    confirmPassword: '',
     role: 'student'
   });
   const [error, setError] = useState('');
@@ -22,21 +23,36 @@ export default function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match!");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       // Capitalize role to match backend expectation: 'Student' or 'Instructor'
       const payload = {
-        ...formData,
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
         role: formData.role.charAt(0).toUpperCase() + formData.role.slice(1)
       };
-      const response = await api.post('/signup', payload);
+      const data = await api.post('/signup', payload);
       
-      // The backend response is unwrapped by the axios interceptor
-      const data = response.data;
-      if (data && data.access_token) {
-        const token = data.access_token;
-        const userData = { id: data.id, name: data.name, email: data.email, role: data.role };
+      // Use normalized token from interceptor
+      const token = data?.token || data?.access_token;
+      
+      if (token) {
+        // Handle both flat response and nested 'user' key if present
+        const userFields = data.user || data;
+        const userData = { 
+          id: userFields.id, 
+          name: userFields.name, 
+          email: userFields.email, 
+          role: userFields.role 
+        };
         login(userData, token);
       } else {
         setError("Account created but login failed. Please log in manually.");
@@ -124,8 +140,26 @@ export default function Signup() {
                 </div>
 
                 <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700">
+                    Confirm Password
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      required
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className="block w-full rounded-xl border-0 py-3 px-4 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 transition-all"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+
+                <div>
                   <label htmlFor="role" className="block text-sm font-medium text-slate-700">
-                    Role
+                    What is your role?
                   </label>
                   <div className="mt-2">
                     <select
@@ -136,7 +170,7 @@ export default function Signup() {
                       className="block w-full rounded-xl border-0 py-3 px-4 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 transition-all bg-white"
                     >
                       <option value="student">Student</option>
-                      <option value="instructor">Instructor</option>
+                      <option value="instructor">Institution / Instructor</option>
                     </select>
                   </div>
                 </div>

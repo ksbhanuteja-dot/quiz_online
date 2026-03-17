@@ -12,8 +12,8 @@ export default function AvailableQuizzes() {
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
-        const response = await api.get('/student/quizzes/');
-        setQuizzes(response.data);
+        const data = await api.get('/student/available-quizzes');
+        setQuizzes(data);
       } catch (err) {
         console.warn('Using mock available quizzes:', err);
         setQuizzes([

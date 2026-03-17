@@ -15,8 +15,8 @@ export default function QuizList() {
 
   const fetchQuizzes = async () => {
     try {
-      const response = await api.get('/instructor/quizzes/');
-      setQuizzes(response.data || []);
+      const data = await api.get('/instructor/quizzes/');
+      setQuizzes(data || []);
       setError(null); // Clear any previous errors on success
     } catch (err) {
       console.error("Failed to fetch quizzes:", err);

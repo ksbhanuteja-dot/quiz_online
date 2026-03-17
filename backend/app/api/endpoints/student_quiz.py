@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from datetime import datetime, timezone
 from app.database import get_db
@@ -122,13 +122,26 @@ def submit_quiz_attempt(
 
     # Calculate score
     total_score = 0
-    correct_options = {opt.question_id: opt.id for q in quiz.questions for opt in q.options if opt.is_correct}
+    # Create a mapping of question_id -> correct_option_id
+    correct_options = {}
+    for question in quiz.questions:
+        for option in question.options:
+            if option.is_correct:
+                correct_options[question.id] = option.id
+                break
+
+    print(f"DEBUG: correct_options dictionary: {correct_options}")
     
-    # Clear saved answers to re-submit finalize
+    # Clear previous saved answers for this attempt and save the final submission
     db.query(StudentAnswer).filter(StudentAnswer.attempt_id == attempt.id).delete()
     
     for ans in submission.answers:
-        is_correct = correct_options.get(ans.question_id) == ans.selected_option_id
+        ans_opt_id = int(ans.selected_option_id)
+        correct_opt_id = correct_options.get(ans.question_id)
+        is_correct = (correct_opt_id == ans_opt_id) if correct_opt_id is not None else False
+        
+        print(f"DEBUG: QID {ans.question_id}, Selected Opt: {ans_opt_id} (type: {type(ans_opt_id)}), Correct Opt: {correct_opt_id} (type: {type(correct_opt_id)}), Match: {is_correct}")
+        
         if is_correct:
             total_score += 1
             
@@ -139,6 +152,7 @@ def submit_quiz_attempt(
         )
         db.add(student_ans)
     
+    print(f"DEBUG: Calculated total_score: {total_score}")
     attempt.score = total_score
     attempt.status = "completed"
     attempt.completed_at = now

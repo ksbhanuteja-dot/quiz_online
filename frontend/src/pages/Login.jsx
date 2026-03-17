@@ -18,21 +18,24 @@ export default function Login() {
 
     try {
       // Step 1: Login to get the JWT token
-      // Backend now accepts JSON { email, password }
-      const tokenRes = await api.post('/login', { email, password });
-      const token = tokenRes.data?.token || tokenRes.data?.access_token;
-
+      const data = await api.post('/login', { email, password });
+      const token = data?.token || data?.access_token;
+      
       if (!token) {
         setError("Invalid response from server: no token received.");
         setIsLoading(false);
         return;
       }
 
-      // Step 2: Use the token to fetch the user's profile
-      const userRes = await api.get('/auth/me', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const userData = userRes.data;
+      // Step 2: Use the token to fetch the user's profile if not already provided
+      // Use data.user if it's there, otherwise if data has 'role' it's already unwrapped user data
+      let userData = data.user || (data.role ? data : null);
+      
+      if (!userData) {
+        userData = await api.get('/auth/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
 
       // Step 3: Log in — AuthContext will navigate to the correct dashboard
       login(userData, token);

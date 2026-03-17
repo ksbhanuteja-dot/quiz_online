@@ -27,9 +27,14 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
     
-    if (userData.role?.toLowerCase() === 'instructor') {
+    const role = userData.role?.toLowerCase();
+    console.log("AuthContext: Logging in user:", userData.email, "Role:", role);
+    
+    if (role === 'instructor') {
+      console.log("AuthContext: Navigating to /dashboard");
       navigate('/dashboard');
     } else {
+      console.log("AuthContext: Navigating to /student-dashboard");
       navigate('/student-dashboard');
     }
   };

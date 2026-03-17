@@ -19,8 +19,8 @@ export default function StudentDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await api.get('/student/dashboard/stats');
-        setStats(response.data);
+        const data = await api.get('/student/dashboard/stats');
+        setStats(data);
       } catch (err) {
         console.warn('Using mock data for student dashboard:', err);
         // Fallback mock data

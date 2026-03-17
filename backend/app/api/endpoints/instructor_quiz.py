@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from app.database import get_db
 from app.models import Quiz, Question, Option, User
@@ -23,6 +23,21 @@ def create_quiz(
         instructor_id=current_user.id
     )
     db.add(new_quiz)
+    db.flush() # Get quiz ID
+    
+    for q_in in quiz_in.questions:
+        new_question = Question(quiz_id=new_quiz.id, question_text=q_in.question_text)
+        db.add(new_question)
+        db.flush() # Get question ID
+        
+        for opt_in in q_in.options:
+            new_opt = Option(
+                question_id=new_question.id,
+                option_text=opt_in.option_text,
+                is_correct=opt_in.is_correct
+            )
+            db.add(new_opt)
+    
     db.commit()
     db.refresh(new_quiz)
     return success_response(new_quiz)
@@ -32,7 +47,7 @@ def get_my_quizzes(
     db: Session = Depends(get_db), 
     current_user: User = Depends(require_role("Instructor"))
 ):
-    results = db.query(Quiz).filter(Quiz.instructor_id == current_user.id).all()
+    results = db.query(Quiz).options(joinedload(Quiz.questions)).filter(Quiz.instructor_id == current_user.id).all()
     return success_response(results)
 
 @router.get("/{quiz_id}", response_model=APIResponse[QuizFullResponse])

@@ -17,8 +17,8 @@ export default function InstructorDashboard() {
     // Try fetching from API later
     const fetchStats = async () => {
       try {
-        const response = await api.get('/instructor/analytics/stats');
-        setStats(response.data);
+        const data = await api.get('/instructor/stats');
+        setStats(data);
       } catch (err) {
         console.warn('API failed:', err);
         setStats(null);

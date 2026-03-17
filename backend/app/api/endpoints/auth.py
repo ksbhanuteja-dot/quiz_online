@@ -54,7 +54,8 @@ def signup(user_in: UserCreate, db: Session = Depends(get_db)):
         "email": new_user.email,
         "role": new_user.role,
         "access_token": access_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "debug_fingerprint": "ANTIGRAVITY_v1"
     })
 
 

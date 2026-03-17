@@ -38,7 +38,7 @@ class QuizBase(BaseModel):
     timer: int # in seconds
 
 class QuizCreate(QuizBase):
-    pass
+    questions: List[QuestionCreate] = []
 
 class QuizUpdate(BaseModel):
     title: Optional[str] = None

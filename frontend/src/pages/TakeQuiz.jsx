@@ -18,9 +18,9 @@ export default function TakeQuiz() {
     const fetchQuiz = async () => {
       try {
         // First, fetch the quiz details
-        const detailsResponse = await api.get(`/student/quizzes/${id}`);
-        setQuiz(detailsResponse.data);
-        setTimeLeft(detailsResponse.data.timer);
+        const data = await api.get(`/student/quizzes/${id}`);
+        setQuiz(data);
+        setTimeLeft(data.timer);
         
         // Then, notify backend that an attempt has started (or resume existing)
         try {
@@ -29,19 +29,8 @@ export default function TakeQuiz() {
           console.error("Failed to start attempt in backend:", startErr);
         }
       } catch (err) {
-        console.warn('Mocking quiz data:', err);
-        const mockQuiz = {
-          id: id,
-          title: 'React Performance Optimization',
-          timer: 600, // 10 mins
-          questions: [
-            { id: 1, question_text: 'Which hook should you use to memoize a computationally expensive pure function?', options: [{id: 11, option_text: 'useState'}, {id: 12, option_text: 'useEffect'}, {id: 13, option_text: 'useMemo'}, {id: 14, option_text: 'useCallback'}] },
-            { id: 2, question_text: 'What does React.memo do?', options: [{id: 21, option_text: 'Memoizes a function'}, {id: 22, option_text: 'Prevents re-rendering of a component if props did not change'}, {id: 23, option_text: 'Memoizes state'}, {id: 24, option_text: 'None of the above'}] },
-            { id: 3, question_text: 'Why might using index as a key in a mapped list be bad for performance?', options: [{id: 31, option_text: 'It throws an error'}, {id: 32, option_text: 'It can cause React to unnecessarily re-render or mix up UI state on reorder'}, {id: 33, option_text: 'It uses more memory'}, {id: 34, option_text: 'Keys must be strings'}] }
-          ]
-        };
-        setQuiz(mockQuiz);
-        setTimeLeft(mockQuiz.timer);
+        setError(err.response?.data?.message || 'Failed to fetch quiz details.');
+        console.error('Fetch quiz error:', err);
       }
     };
     fetchQuiz();
@@ -61,26 +50,12 @@ export default function TakeQuiz() {
     };
 
     try {
-      const response = await api.post(`/student/quizzes/${id}/submit`, payload);
-      const resultData = response.data;
-      navigate(`/student-dashboard/results/${resultData.id}`, { state: { result: resultData } });
+      const data = await api.post(`/student/quizzes/${id}/submit`, payload);
+      navigate(`/student-dashboard/results/${data.id}`, { state: { result: data } });
     } catch (err) {
-      console.warn('Mocking submission:', err);
-      // Mock result processing
-      let score = 0;
-      const total = quiz.questions.length;
-      // Mock logic: randomly assume correct or look for specific answers if we want
-      score = Object.keys(answers).length > 0 ? Object.keys(answers).length : 0; 
-      
-      const mockResult = {
-        percentageScore: Math.round((score / total) * 100),
-        correctCount: score,
-        totalQuestions: total,
-        quizTitle: quiz.title,
-        attemptId: Date.now()
-      };
-      
-      setTimeout(() => navigate(`/student-dashboard/results/${mockResult.attemptId}`, { state: { result: mockResult } }), 1000);
+      setError(err.response?.data?.message || 'Failed to submit quiz.');
+      console.error('Submission error:', err);
+      setIsSubmitting(false);
     }
   }, [id, answers, navigate, quiz]);
 

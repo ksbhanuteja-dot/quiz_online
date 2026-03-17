@@ -16,16 +16,20 @@ export default function EditQuiz() {
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
-        const response = await api.get(`/instructor/quizzes/${id}`);
-        setQuizDetails({ title: response.data.title, timer: response.data.timer });
-        setQuestions(response.data.questions.map(q => ({ ...q, id: q.id || Date.now() + Math.random() })));
+        const data = await api.get(`/instructor/quizzes/${id}`);
+        setQuizDetails({ title: data.title, timer: data.timer });
+        setQuestions(data.questions.map(q => {
+          const correctIdx = q.options.findIndex(o => o.is_correct);
+          return {
+            ...q,
+            text: q.question_text,
+            correctOptionIndex: correctIdx === -1 ? 0 : correctIdx,
+            options: q.options.map(o => typeof o === 'string' ? o : o.option_text)
+          };
+        }));
       } catch (err) {
-        console.warn("Using mock data due to API failure:", err);
-        // Mock data fetch
-        setQuizDetails({ title: 'React Fundamentals', timer: 1800 });
-        setQuestions([
-          { id: 1, text: 'What is JSX?', options: ['JavaScript XML', 'Java Syntax Extension', 'JSON Syntax XML', 'None of the above'], correctOptionIndex: 0 }
-        ]);
+        setError("Failed to load quiz data. Please try again.");
+        console.error("API Fetch error:", err);
       } finally {
         setIsLoading(false);
       }
@@ -64,8 +68,8 @@ export default function EditQuiz() {
       await api.put(`/instructor/quizzes/${id}`, payload);
       navigate('/dashboard/quizzes');
     } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update quiz.');
       console.error(err);
-      setTimeout(() => navigate('/dashboard/quizzes'), 500); // mock success
     } finally {
       setIsSubmitting(false);
     }

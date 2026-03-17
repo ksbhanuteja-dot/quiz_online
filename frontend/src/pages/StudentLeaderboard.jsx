@@ -10,8 +10,8 @@ export default function StudentLeaderboard() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await api.get('/student/dashboard/leaderboard');
-        setStudents(response.data);
+        const data = await api.get('/student/dashboard/leaderboard');
+        setStudents(data);
       } catch (err) {
         console.warn("Using mock student leaderboard:", err);
         setStudents([

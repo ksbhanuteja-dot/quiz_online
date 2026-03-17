@@ -64,30 +64,25 @@ export default function CreateQuiz() {
     // Basic validation
     if (!quizDetails.title.trim()) return setError('Quiz title is required');
     if (questions.some(q => !q.text.trim())) return setError('All questions must have text');
-    if (questions.some(q => q.options.some(opt => !opt.trim()))) return setError('All options must have text');
+    if (questions.some(q => q.options.some(opt => !opt.trim()))) return setError('All 4 options must be provided for every question');
 
     setIsSubmitting(true);
     
     try {
-      // Step 1: Create the quiz (title + timer only)
-      const quizRes = await api.post('/instructor/quizzes/', {
+      // Create the entire quiz with questions and options in one go
+      const payload = {
         title: quizDetails.title,
-        timer: parseInt(quizDetails.timer)
-      });
-      const quizId = quizRes.data.id;
-
-      // Step 2: Add each question with its options
-      for (const q of questions) {
-        const questionPayload = {
+        timer: parseInt(quizDetails.timer),
+        questions: questions.map(q => ({
           question_text: q.text,
           options: q.options.map((opt, idx) => ({
             option_text: opt,
             is_correct: idx === q.correctOptionIndex
           }))
-        };
-        await api.post(`/instructor/quizzes/${quizId}/questions`, questionPayload);
-      }
+        }))
+      };
 
+      await api.post('/instructor/quizzes/', payload);
       navigate('/dashboard/quizzes');
     } catch (err) {
       console.error(err);
@@ -132,6 +127,7 @@ export default function CreateQuiz() {
                 name="timer"
                 value={quizDetails.timer}
                 onChange={handleQuizDetailChange}
+                onFocus={(e) => e.target.select()}
                 placeholder="1800"
                 min="60"
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-primary-600 outline-none"
@@ -176,7 +172,9 @@ export default function CreateQuiz() {
                   </div>
                   
                   <div className="space-y-4">
-                    <label className="block text-sm font-medium text-slate-700">Answers (Select the correct one)</label>
+                    <label className="block text-sm font-medium text-slate-700 tracking-tight">
+                      Question Options (Strictly 4 Required)
+                    </label>
                     {q.options.map((opt, optIndex) => (
                       <div key={optIndex} className={`flex items-center gap-4 p-2 rounded-xl border transition-colors ${q.correctOptionIndex === optIndex ? 'border-primary-500 bg-primary-50/50' : 'border-slate-200 hover:border-slate-300'}`}>
                         <div className="flex items-center justify-center p-2">
