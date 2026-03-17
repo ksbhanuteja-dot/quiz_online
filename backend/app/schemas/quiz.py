@@ -43,12 +43,13 @@ class QuizCreate(QuizBase):
 class QuizUpdate(BaseModel):
     title: Optional[str] = None
     timer: Optional[int] = None
+    questions: Optional[List[QuestionCreate]] = None
 
 class QuizResponse(QuizBase):
     id: int
     instructor_id: int
-    instructor: str = Field(validation_alias="instructor_name")
-    questionsCount: int = Field(validation_alias="questions_count")
+    instructor: str = Field(validation_alias="instructor_name", serialization_alias="instructor")
+    questionsCount: int = Field(validation_alias="questions_count", serialization_alias="questionsCount")
     created_at: datetime
 
     class Config:

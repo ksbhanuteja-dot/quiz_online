@@ -16,7 +16,7 @@ def list_active_quizzes(
     db: Session = Depends(get_db), 
     current_user: User = Depends(require_role("Student"))
 ):
-    results = db.query(Quiz).all()
+    results = db.query(Quiz).options(joinedload(Quiz.questions)).all()
     return success_response(results)
 
 @router.get("/{quiz_id}", response_model=APIResponse[QuizFullResponse])
@@ -101,7 +101,11 @@ def submit_quiz_attempt(
     quiz = db.query(Quiz).options(
         joinedload(Quiz.questions).joinedload(Question.options)
     ).filter(Quiz.id == quiz_id).first()
-    attempt = db.query(Attempt).filter(
+    
+    # Eager load the quiz and questions for the attempt response
+    attempt = db.query(Attempt).options(
+        joinedload(Attempt.quiz).joinedload(Quiz.questions)
+    ).filter(
         Attempt.quiz_id == quiz_id,
         Attempt.student_id == current_user.id,
         Attempt.status == "in_progress"
@@ -112,7 +116,11 @@ def submit_quiz_attempt(
     
     # TIMER VALIDATION
     now = datetime.now(timezone.utc)
-    elapsed_time = (now - attempt.started_at.replace(tzinfo=timezone.utc)).total_seconds()
+    started_at = attempt.started_at
+    if started_at.tzinfo is None:
+        started_at = started_at.replace(tzinfo=timezone.utc)
+        
+    elapsed_time = (now - started_at).total_seconds()
     
     # Allow a small buffer (e.g., 5 seconds) for network latency
     if elapsed_time > (quiz.timer + 5):
@@ -127,35 +135,31 @@ def submit_quiz_attempt(
     for question in quiz.questions:
         for option in question.options:
             if option.is_correct:
-                correct_options[question.id] = option.id
+                correct_options[int(question.id)] = int(option.id)
                 break
 
-    print(f"DEBUG: correct_options dictionary: {correct_options}")
-    
     # Clear previous saved answers for this attempt and save the final submission
     db.query(StudentAnswer).filter(StudentAnswer.attempt_id == attempt.id).delete()
     
     for ans in submission.answers:
+        ans_q_id = int(ans.question_id)
         ans_opt_id = int(ans.selected_option_id)
-        correct_opt_id = correct_options.get(ans.question_id)
-        is_correct = (correct_opt_id == ans_opt_id) if correct_opt_id is not None else False
+        correct_opt_id = correct_options.get(ans_q_id)
         
-        print(f"DEBUG: QID {ans.question_id}, Selected Opt: {ans_opt_id} (type: {type(ans_opt_id)}), Correct Opt: {correct_opt_id} (type: {type(correct_opt_id)}), Match: {is_correct}")
+        is_correct = (correct_opt_id == ans_opt_id) if correct_opt_id is not None else False
         
         if is_correct:
             total_score += 1
             
         student_ans = StudentAnswer(
             attempt_id=attempt.id,
-            question_id=ans.question_id,
-            selected_option_id=ans.selected_option_id
+            question_id=ans_q_id,
+            selected_option_id=ans_opt_id
         )
         db.add(student_ans)
     
-    print(f"DEBUG: Calculated total_score: {total_score}")
     attempt.score = total_score
     attempt.status = "completed"
     attempt.completed_at = now
     db.commit()
-    db.refresh(attempt)
     return success_response(attempt)

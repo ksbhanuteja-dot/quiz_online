@@ -62,7 +62,17 @@ export default function EditQuiz() {
     }
 
     setIsSubmitting(true);
-    const payload = { ...quizDetails, questions: questions.map(({ id, ...rest }) => rest) };
+    const payload = {
+      title: quizDetails.title,
+      timer: parseInt(quizDetails.timer),
+      questions: questions.map(q => ({
+        question_text: q.text,
+        options: q.options.map((opt, idx) => ({
+          option_text: opt,
+          is_correct: idx === q.correctOptionIndex
+        }))
+      }))
+    };
 
     try {
       await api.put(`/instructor/quizzes/${id}`, payload);

@@ -77,6 +77,26 @@ def update_quiz(
     if quiz_in.timer is not None:
         quiz.timer = quiz_in.timer
         
+    if quiz_in.questions is not None:
+        # FULL REPLACEMENT LOGIC
+        # 1. Delete existing questions (cascade will handle options)
+        db.query(Question).filter(Question.quiz_id == quiz.id).delete()
+        db.flush()
+        
+        # 2. Add new questions
+        for q_in in quiz_in.questions:
+            new_question = Question(quiz_id=quiz.id, question_text=q_in.question_text)
+            db.add(new_question)
+            db.flush()
+            
+            for opt_in in q_in.options:
+                new_opt = Option(
+                    question_id=new_question.id,
+                    option_text=opt_in.option_text,
+                    is_correct=opt_in.is_correct
+                )
+                db.add(new_opt)
+        
     db.commit()
     db.refresh(quiz)
     return success_response(quiz)

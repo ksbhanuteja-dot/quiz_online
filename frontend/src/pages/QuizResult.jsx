@@ -17,7 +17,7 @@ export default function QuizResult() {
     );
   }
 
-  const isPassed = result.score >= 70;
+  const isPassed = (result.percentageScore || 0) >= 70;
 
   return (
     <div className="max-w-3xl mx-auto py-12">

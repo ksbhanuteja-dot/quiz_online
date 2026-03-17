@@ -6,21 +6,18 @@ import api from '../api/axios';
 export default function AvailableQuizzes() {
   const [quizzes, setQuizzes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
-        const data = await api.get('/student/available-quizzes');
+        const data = await api.get('/student/quizzes');
         setQuizzes(data);
       } catch (err) {
-        console.warn('Using mock available quizzes:', err);
-        setQuizzes([
-          { id: 101, title: 'React Performance Optimization', timer: 1200, questionsCount: 10, instructor: 'Alice Freeman' },
-          { id: 102, title: 'Node.js Security Best Practices', timer: 2400, questionsCount: 20, instructor: 'Bob Johnson' },
-          { id: 103, title: 'Advanced CSS Layouts', timer: 1800, questionsCount: 15, instructor: 'Charlie Davis' },
-        ]);
+        setError("Failed to load quizzes. Please check your connection.");
+        console.error("Fetch error:", err);
       } finally {
         setIsLoading(false);
       }
@@ -53,6 +50,12 @@ export default function AvailableQuizzes() {
           />
         </div>
       </div>
+
+      {error && (
+        <div className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-200">
+          {error}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
