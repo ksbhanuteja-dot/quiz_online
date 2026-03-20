@@ -126,6 +126,11 @@ export default function TakeQuiz() {
       </div>
 
       <div className="mt-8 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-sm transition-colors">
+        {error && (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+            {error}
+          </div>
+        )}
         <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white leading-relaxed mb-8">
           {currentQuestionIndex + 1}. {currentQuestion.question_text}
         </h2>

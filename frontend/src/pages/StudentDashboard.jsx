@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { Target, TrendingUp, Clock, FileText, CheckCircle2 } from 'lucide-react';
+import { AuthContext } from '../context/auth-context';
+import { Target, TrendingUp, Clock, FileText } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
@@ -27,26 +27,14 @@ export default function StudentDashboard() {
         ]);
         setStats(statsRes.data);
         setAttempts(attemptsRes.data);
-      } catch (err) {
-        console.warn('Using mock data for student dashboard:', err);
-        // Fallback mock data
+      } catch {
         setStats({
-          totalAttempted: 12,
-          averageScore: 82.5,
-          highestScore: 98,
-          recentScores: [
-            { quizName: 'React Basics', score: 75, date: '11/01' },
-            { quizName: 'Hooks', score: 85, date: '11/05' },
-            { quizName: 'Router', score: 90, date: '11/10' },
-            { quizName: 'Redux', score: 80, date: '11/15' },
-            { quizName: 'Tailwind', score: 98, date: '11/20' },
-          ]
+          totalAttempted: 0,
+          averageScore: 0,
+          highestScore: 0,
+          recentScores: []
         });
-        setAttempts([
-          { attemptId: 1, quizTitle: 'React Basics', score: 75, completedAt: '2026-03-01T10:00:00' },
-          { attemptId: 2, quizTitle: 'Hooks', score: 85, completedAt: '2026-03-05T10:00:00' },
-          { attemptId: 3, quizTitle: 'Router', score: 90, completedAt: '2026-03-10T10:00:00' },
-        ]);
+        setAttempts([]);
       } finally {
         setIsLoading(false);
       }

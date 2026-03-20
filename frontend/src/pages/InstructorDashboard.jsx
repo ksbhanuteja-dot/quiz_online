@@ -23,13 +23,12 @@ export default function InstructorDashboard() {
         ]);
         setStats(statsRes.data);
         setRecentQuizzes(quizzesRes.data.slice(0, 5));
-      } catch (err) {
-        console.warn('Using mock data, API failed:', err);
+      } catch {
         setStats({
-          totalQuizzes: 12,
-          totalAttempts: 348,
-          averageScore: 76.5,
-          activeStudents: 45
+          totalQuizzes: 0,
+          totalAttempts: 0,
+          averageScore: 0,
+          activeStudents: 0
         });
       } finally {
         setIsLoading(false);

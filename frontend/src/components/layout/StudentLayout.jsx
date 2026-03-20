@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
+import { AuthContext } from '../../context/auth-context';
 import { 
   Brain, 
   LayoutDashboard, 

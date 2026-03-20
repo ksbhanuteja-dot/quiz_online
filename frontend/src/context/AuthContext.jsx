@@ -1,32 +1,35 @@
-import { createContext, useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from './auth-context';
 
-export const AuthContext = createContext();
+function getStoredUser() {
+  const storedUser = localStorage.getItem('user');
+  if (!storedUser) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(storedUser);
+  } catch (error) {
+    console.error('Failed to parse stored user details', error);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    return null;
+  }
+}
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-
-  useEffect(() => {
+  const [user, setUser] = useState(() => {
     const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (token && storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error("Failed to parse user details", e);
-      }
-    }
-    setLoading(false);
-  }, []);
+    return token ? getStoredUser() : null;
+  });
+  const navigate = useNavigate();
 
   const login = (userData, token) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
-    
+
     if (userData.role === 'instructor' || userData.role === 'Instructor') {
       navigate('/dashboard');
     } else {
@@ -42,8 +45,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, login, logout, loading: false }}>
+      {children}
     </AuthContext.Provider>
   );
 };
