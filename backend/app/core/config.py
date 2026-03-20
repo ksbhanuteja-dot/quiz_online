@@ -19,7 +19,8 @@ if project_env.exists():
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str
+    DATABASE_URL: Optional[str] = None
+    MYSQL_URL: Optional[str] = None
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
@@ -44,6 +45,18 @@ class Settings(BaseSettings):
             if normalized in {"0", "false", "no", "off", "release", "production"}:
                 return False
         return bool(value)
+
+    @field_validator("DATABASE_URL", mode="after")
+    @classmethod
+    def resolve_database_url(cls, value, info):
+        database_url = value or info.data.get("MYSQL_URL")
+        if not database_url:
+            raise ValueError("DATABASE_URL or MYSQL_URL must be provided")
+
+        if database_url.startswith("mysql://"):
+            return "mysql+pymysql://" + database_url.removeprefix("mysql://")
+
+        return database_url
 
 
 settings = Settings()
