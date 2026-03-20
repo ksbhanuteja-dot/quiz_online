@@ -5,8 +5,17 @@ from dotenv import load_dotenv
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-load_dotenv(BASE_DIR / ".env")
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+BASE_DIR = PROJECT_ROOT / "backend"
+
+backend_env = BASE_DIR / ".env"
+project_env = PROJECT_ROOT / ".env"
+
+if backend_env.exists():
+    load_dotenv(backend_env)
+
+if project_env.exists():
+    load_dotenv(project_env, override=True)
 
 
 class Settings(BaseSettings):
